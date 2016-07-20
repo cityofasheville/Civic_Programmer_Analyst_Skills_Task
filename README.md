@@ -21,11 +21,12 @@ The dashboard to should do the the following:
 
 1. Provide summary statistics that tell a meaningful story about the data
 2. Provide information about the dataset that lets the user know, at a glance, what the dataset is and what type of information could be discovered from the dataset
-3. Always be up to date using latest permitting data provided through our Open Data Portal (see Resources below)
-4. Responsive both in design and in the amount of time it takes to load.
-5. Use a framework like Angular1, Angular2, React/Redux (if you use something else, please let us know why)
-6. Use a visualization library like D3.js or chart.js
-7. Be designed with an eye toward reusability and configurability (We don’t want to code a separate dashboard for each dataset. Ideally, we would have one dashboard that could be passed a separate configuration for each dataset. Don’t worry about this too much on the prototype, but if you see opportunities for abstraction, please take them.)
+3. Be restricted to permits active in the last year
+4. Be always up to date using latest permitting data provided through our Open Data Portal (see Resources below)
+5. Be responsive both in design and in the amount of time it takes to load.
+6. Use a framework like Angular1, Angular2, React-Redux (if you use something else, please let us know why)
+7. Use a visualization library like D3.js or chart.js
+8. Be designed with an eye toward reusability and configurability (We don’t want to code a separate dashboard for each dataset. Ideally, we would have one dashboard that could be passed a separate configuration for each dataset. Don’t worry about this too much on the prototype, but if you see opportunities for abstraction, please take them.)
 
 
 ##Rules 
