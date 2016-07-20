@@ -1,7 +1,5 @@
-# Civic_Programmer_Analyst_Skills_Task
+#Civic Programmer Analyst Skills Task
 
-
-#Civic Programmer Skills Task
 > A skills assessment for a Civic Programmer Analyst position
 
 ##The Problem
