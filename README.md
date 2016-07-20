@@ -46,7 +46,6 @@ Keep it simple. We are not looking for a finished product but want to learn abou
 ##Resources
 
 
-City of Asheville’s Open Data Portal Permit Data: http://data.ashevillenc.gov/datasets/0b8ff99cce324fb58c81d5433ae883cf_0
+* [City of Asheville’s Open Data Portal Permit Data](http://data.ashevillenc.gov/datasets/0b8ff99cce324fb58c81d5433ae883cf_0) : The data can be interacted with as GeoJSON, through the [ArcGIS REST API](http://arcgis.ashevillenc.gov/arcgis/rest/services/Permits/AshevillePermits/MapServer/0), or by downloading as a spreadsheet.
 
-
-(This dataset is updated nightly from permitting software database)
+(This dataset is updated nightly from the City's permitting software database)
