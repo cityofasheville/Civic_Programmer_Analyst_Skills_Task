@@ -1,7 +1,8 @@
-import React, { PropTypes } from 'react'
-import { connect } from 'react-redux'
-import { store } from 'redux'
-import configureStore from './state/configureStore'
+import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
+import { store } from 'redux';
+
+import datasets from './datasets';
 
 export default class Dashboard extends React.Component {
   constructor(props) {
@@ -9,9 +10,9 @@ export default class Dashboard extends React.Component {
     this.state = {test: 'foo'};
   }
 
-  static fetchData(baseServerUrl) {
-    const store = configureStore();
-    return store;
+  componentWillMount() {
+    // Fetch the datasets here.
+    console.log("The datasets are: " + JSON.stringify(datasets));
   }
 
   render() {

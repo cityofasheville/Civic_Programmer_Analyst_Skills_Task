@@ -1,9 +1,10 @@
 ## Installation
 
+````
   npm install
   npm start
-
-Go to http://localhost:3000
+````
+Then navigate in browser to http://localhost:3000
 
 ## Future Considerations
 

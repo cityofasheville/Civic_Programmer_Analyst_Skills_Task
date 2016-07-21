@@ -1,12 +1,10 @@
 import React from 'react';
 import { render } from 'react-dom';
 import { Provider } from 'react-redux'
+import configureStore from './state/configureStore'
 import Dashboard from './DashBoard.js';
 
-const  baseServerUrl = "http://ttp.dev/admin/1";
-
-// Change second argument to a course ID to simulate single-course editor
-const store = Dashboard.fetchData(baseServerUrl, -1);
+const store = configureStore();
 
 render(
   <Provider store={store}>
