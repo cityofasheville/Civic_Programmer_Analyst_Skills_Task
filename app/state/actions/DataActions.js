@@ -23,8 +23,9 @@ function createArcGISUrl(dataset, doCountOnly, offset, count) {
 }
 
 function doApiFetch (dataset, dispatch, maxRecordCount, count) {
-  let url;
-  let initialCall = (count < 0);
+  // Initial call gets the expected record count so that we can keep the user informed
+  // as to what's happening.
+  let url, initialCall = (count < 0);
   if (initialCall)
     url = createArcGISUrl(dataset, true, count, maxRecordCount);
   else
