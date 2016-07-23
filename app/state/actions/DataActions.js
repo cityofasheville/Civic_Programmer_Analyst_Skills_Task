@@ -2,11 +2,16 @@ import fetch from 'isomorphic-fetch'
 import * as actionTypes from './ActionTypes';
 import { setErrorMessage } from './CommonActions'
 
+// This is a sample data set with ~100 records. Set simulateApi to true
+// to use instead of actual REST API calls
+import sampleData from './sampleData';
+var simulateApi = true;
+
 // A bit ugly, but we'll just hardcode for now.
 function createArcGISUrl(dataset, doCountOnly, offset, count) {
-  const fields = "record_name,date_opened,record_module,record_status,record_status_date,"
+  const fields = "record_name,date_opened,record_status,record_status_date,"
                + "record_type,record_type_group,record_type_category,record_type_type,"
-               + "record_type_subtype,status,latitude,longitude";
+               + "record_type_subtype,latitude,longitude";
   const q = dataset.query;
   let url = q.url + `?where=${encodeURIComponent(q.where)}&text=&objectIds=&time=&geometry=`;
   url += "&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects";
@@ -22,6 +27,55 @@ function createArcGISUrl(dataset, doCountOnly, offset, count) {
   return url;
 }
 
+function translateModule (record_type_group) {
+  switch(record_type_group) {
+    case 'Permits':
+      return 'Construction';
+    case 'Planning':
+      return 'Planning';
+    case 'Services':
+      return 'Enforcement';
+    default:
+      return 'Unknown';
+  }
+}
+
+function transformRecord(inR) {
+  let record = {
+    name: inR.record_name,
+    date_opened: inR.date_opened,
+    status: inR.record_status,
+    date_changed: inR.record_status_date,
+    group: translateModule(inR.record_type_group),
+    permit_type: inR.record_type_type,
+    category: inR.record_type_category,
+    work_type: [inR.record_type, inR.record_type_subtype],
+    latitude: inR.latitude,
+    longitude: inR.longitude
+  };
+  return record;
+}
+
+function loadSampleData (dataset, inputData, dispatch) {
+  const data = inputData.features.map(transformRecord);
+  dispatch({type: actionTypes.UPDATE_DATASET, data: {
+    tag: dataset.tag,
+    operation: 'finish',
+    items: data
+  }});
+}
+
+function doFakeFetch (dataset, dispatch, maxRecordCount, count) {
+  dispatch({type: actionTypes.UPDATE_DATASET, data: {
+    tag: dataset.tag,
+    operation: 'count',
+    count: sampleData.features.length
+  }});
+
+  // Add a short delay to simulate actual load time
+  setTimeout (loadSampleData.bind(null, dataset, sampleData, dispatch), 3000);
+}
+
 function doApiFetch (dataset, dispatch, maxRecordCount, count) {
   // Initial call gets the expected record count so that we can keep the user informed
   // as to what's happening.
@@ -31,7 +85,7 @@ function doApiFetch (dataset, dispatch, maxRecordCount, count) {
   else
     url = createArcGISUrl(dataset, false, count, maxRecordCount);
   console.log(`Fetch with offset = ${count}, URL: ${url}`);
-  return fetch(url, {method: 'get', timeout: 30000})
+  return fetch(url, {method: 'get', timeout: 15000})
     .then ((response ) => { return response.json(); })
     .then ((json) => {
       if (json.error != undefined) {
@@ -58,14 +112,15 @@ function doApiFetch (dataset, dispatch, maxRecordCount, count) {
           }
         }
         else {
-          const maxRecords = 2000; // DEBUG
-          let done = json.features.length < maxRecordCount || count >= maxRecords;
+          const maxRecords = 500; // DEBUG
+          const done = json.features.length < maxRecordCount || count >= maxRecords;
+          const data = json.features.map(transformRecord);
+
           dispatch({type: actionTypes.UPDATE_DATASET, data: {
             tag: dataset.tag,
             operation: done?'finish':'add',
-            items: json.features
+            items: data
           }});
-
           if (!done) { // Request again
             return doApiFetch(dataset, dispatch, maxRecordCount, count + json.features.length);
           }
@@ -99,6 +154,11 @@ export function fetchDataset(dataset, dispatch) {
   if (dataset.source_type == 'arcgis-rest') {
     const maxRecordCount = dataset.query.maxRecordCount;
     // Maybe do config object rather than args here??????????
-    return doApiFetch(dataset, dispatch, maxRecordCount, -1);
+    if (simulateApi) {
+      return doFakeFetch (dataset, dispatch, maxRecordCount, -1);
+    }
+    else {
+      return doApiFetch(dataset, dispatch, maxRecordCount, -1);
+    }
   }
 }
