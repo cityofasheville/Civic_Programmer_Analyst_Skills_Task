@@ -9,7 +9,7 @@ var simulateApi = true;
 
 // A bit ugly, but we'll just hardcode for now.
 function createArcGISUrl(dataset, doCountOnly, offset, count) {
-  const fields = "record_name,date_opened,record_status,record_status_date,"
+  const fields = "date_opened,record_status,record_status_date,"
                + "record_type,record_type_group,record_type_category,record_type_type,"
                + "record_type_subtype,latitude,longitude";
   const q = dataset.query;
@@ -40,16 +40,18 @@ function translateModule (record_type_group) {
   }
 }
 
-function transformRecord(inR) {
+function transformRecord(inR0, useAttributes) {
+  let inR = useAttributes?inR0.attributes:inR0;
   let record = {
     name: inR.record_name,
     date_opened: inR.date_opened,
     status: inR.record_status,
-    date_changed: inR.record_status_date,
+    record_status_date: inR.record_status_date,
     group: translateModule(inR.record_type_group),
     permit_type: inR.record_type_type,
     category: inR.record_type_category,
-    work_type: [inR.record_type, inR.record_type_subtype],
+    work_type: inR.record_type,
+    work_subtype: inR.record_type_subtype,
     latitude: inR.latitude,
     longitude: inR.longitude
   };
@@ -57,7 +59,9 @@ function transformRecord(inR) {
 }
 
 function loadSampleData (dataset, inputData, dispatch) {
-  const data = inputData.features.map(transformRecord);
+  const data = inputData.features.map((item) => {
+    return transformRecord(item, false);
+  });
   dispatch({type: actionTypes.UPDATE_DATASET, data: {
     tag: dataset.tag,
     operation: 'finish',
@@ -71,7 +75,7 @@ function doFakeFetch (dataset, dispatch, maxRecordCount, count) {
     operation: 'count',
     count: sampleData.features.length
   }});
-
+  console.log("We a got a count a " + sampleData.features.length);
   // Add a short delay to simulate actual load time
   setTimeout (loadSampleData.bind(null, dataset, sampleData, dispatch), 3000);
 }
@@ -94,6 +98,7 @@ function doApiFetch (dataset, dispatch, maxRecordCount, count) {
       else {
         if (json.features == undefined) {
           if (json.count != undefined) {
+            console.log("Got a count of " + json.count);
             dispatch({type: actionTypes.UPDATE_DATASET, data: {
               tag: dataset.tag,
               operation: 'count',
@@ -112,9 +117,12 @@ function doApiFetch (dataset, dispatch, maxRecordCount, count) {
           }
         }
         else {
-          const maxRecords = 500; // DEBUG
+          const maxRecords = 50000; // DEBUG
+          console.log("Received records of length " + json.features.length);
           const done = json.features.length < maxRecordCount || count >= maxRecords;
-          const data = json.features.map(transformRecord);
+          const data = json.features.map( (item) => {
+            return transformRecord(item, dataset.query.use_attributes);
+          });
 
           dispatch({type: actionTypes.UPDATE_DATASET, data: {
             tag: dataset.tag,

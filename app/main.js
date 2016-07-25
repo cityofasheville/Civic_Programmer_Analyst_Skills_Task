@@ -3,6 +3,7 @@ import { render } from 'react-dom';
 import { Provider } from 'react-redux'
 import configureStore from './state/configureStore'
 import Dashboard from './DashBoard.js';
+import dashboard_config from './dashboard_config';
 
 /*
 Tasks:
@@ -17,13 +18,12 @@ Tasks:
  For now we'll just configure the datasets in code, but we
  can easily get this from a configuration file dynamically.
 */
-import datasets from './datasets';
 
 const store = configureStore();
 
 render(
   <Provider store={store}>
-    <Dashboard dispatch={store.dispatch} datasets={datasets}/>
+    <Dashboard dispatch={store.dispatch} config={dashboard_config}/>
   </Provider>,
   document.getElementById('avl-dashboard')
 );

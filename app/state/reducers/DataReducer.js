@@ -1,9 +1,17 @@
 import * as types from '../actions/ActionTypes';
 
-export default function data (state = {datasets: {}}, action) {
+export default function data (state = {datasets: {}, filters: {}}, action) {
   console.log("I have an action in DataReducer: " + action.type);
-  //console.log("Current state = " + JSON.stringify(state));
   switch (action.type) {
+    case types.SET_FILTER:
+    {
+      let newFilters = {};
+      let filter = ((action.data.tag in state.filters)?
+                    {...state.filters[action.data.tag]}:
+                    {tag: action.data.tag});
+      let a = 1;
+      return Object.assign({}, state, {filters: newFilters});
+    }
     case types.FETCH_DATASET:
     {
       let tmpDatasets = {};
