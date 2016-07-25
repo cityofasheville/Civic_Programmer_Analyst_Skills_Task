@@ -236,8 +236,8 @@ export default class Dashboard extends React.Component {
       dataset = this.filterDataset(data.datasets[tag], this.state.filters, true);
       filteredCount = dataset.items.length;
       totalCount = data.datasets[tag].items.length;
-      filteredStatus = this.groupByField(dataset.items,'status',6);
-      filteredType = this.groupByField(dataset.items,'work_type',6);
+      filteredStatus = this.groupByField(dataset.items,'record_status',6);
+      filteredType = this.groupByField(dataset.items,'record_type',6);
       console.log("DS: " + JSON.stringify(dataset.definition.query));
       monthlyData = this.groupByMonth(dataset.items, 'record_status_date',
             dataset.definition.query.use_attributes);
