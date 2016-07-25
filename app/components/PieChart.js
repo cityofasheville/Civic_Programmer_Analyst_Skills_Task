@@ -59,23 +59,23 @@ class PieChart extends Component {
   @autobind
   saveDiv(div) {
     if (div == null) {
-      console.log("Called saveDiv with null");
+      //console.log("Called saveDiv with null");
     }
     else {
-      console.log("Called saveDiv without null")
+      //console.log("Called saveDiv without null")
       this.savedDiv = div;
     }
   }
 
     componentDidUpdate() {
-      console.log("I'm in componentDidUpdate");
+      //console.log("I'm in componentDidUpdate");
       let el = this.savedDiv;
       if (this.savedChart != null) {
-        console.log("Now we destroy!");
+        //console.log("Now we destroy!");
         this.savedChart.destroy();
         this.savedChart = null;
       }
-      console.log("On we go");
+      //console.log("On we go");
       if (el != null) {
         let myChart = new Chart(el, {
           type: 'pie',
@@ -92,7 +92,7 @@ class PieChart extends Component {
 
     render() {
       const {data} = this.props;
-      console.log("Here's the data: " + JSON.stringify(data));
+      // console.log("Here's the data: " + JSON.stringify(data));
       let colorIndex = 0;
       const colors = [
         "#5DA5DA", // (blue)

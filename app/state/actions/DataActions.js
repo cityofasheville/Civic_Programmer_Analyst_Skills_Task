@@ -5,18 +5,17 @@ import { setErrorMessage } from './CommonActions'
 // This is a sample data set with ~100 records. Set simulateApi to true
 // to use instead of actual REST API calls
 import sampleData from './sampleData';
-var simulateApi = true;
 
 // A bit ugly, but we'll just hardcode for now.
 function createArcGISUrl(dataset, doCountOnly, offset, count) {
-  const fields = "date_opened,record_status,record_status_date,"
-               + "record_type,record_type_group,record_type_category,record_type_type,"
-               + "record_type_subtype,latitude,longitude";
+  // const fields = "date_opened,record_status,record_status_date,"
+  //              + "record_type,record_type_group,record_type_category,record_type_type,"
+  //              + "record_type_subtype,latitude,longitude";
   const q = dataset.query;
   let url = q.url + `?where=${encodeURIComponent(q.where)}&text=&objectIds=&time=&geometry=`;
   url += "&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects";
   url += "&relationParam="
-  url += `&outFields=${fields}`;
+  url += `&outFields=${q.fields}`;
   url += `&returnGeometry=${q.returnGeometry?"true":"false"}&returnTrueCurves=false`;
   url += "&maxAllowableOffset=&geometryPrecision=&outSR=&returnIdsOnly=false";
   url += `&returnCountOnly=${doCountOnly?"true":"false"}`;
@@ -117,7 +116,7 @@ function doApiFetch (dataset, dispatch, maxRecordCount, count) {
           }
         }
         else {
-          const maxRecords = 50000; // DEBUG
+          const maxRecords = 5000; // DEBUG
           console.log("Received records of length " + json.features.length);
           const done = json.features.length < maxRecordCount || count >= maxRecords;
           const data = json.features.map( (item) => {
@@ -162,7 +161,7 @@ export function fetchDataset(dataset, dispatch) {
   if (dataset.source_type == 'arcgis-rest') {
     const maxRecordCount = dataset.query.maxRecordCount;
     // Maybe do config object rather than args here??????????
-    if (simulateApi) {
+    if (dataset.simulate_api) {
       return doFakeFetch (dataset, dispatch, maxRecordCount, -1);
     }
     else {

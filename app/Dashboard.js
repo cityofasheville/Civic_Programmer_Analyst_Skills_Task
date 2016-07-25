@@ -95,16 +95,27 @@ export default class Dashboard extends React.Component {
     );
   }
 
-  groupByMonth (input, field) {
+  groupByMonth (input, field, use_attributes) {
     let monthlyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let counter = 0;
+    let errCount = 0;
     input.forEach( (r) => {
       let month = 0;
+      ++counter;
       try {
-        let d = new Date(Date.parse(r[field])); // this is the date.
+        let d;
+        if (use_attributes) {
+          d = new Date(r[field] + 0);
+        }
+        else {
+          d = new Date(Date.parse(r[field])); // this is the date.
+        }
         month = d.getMonth();
       }
       catch (err) {
-        // We'll just let the month be 0 for now.
+        if (errCount < 20) console.log("Error in groupByMonth" + r[field]);
+        ++errCount;
+        month = 0; // We'll just let the month be 0 for now.
       }
       monthlyData[month] += 1;
     });
@@ -162,7 +173,10 @@ export default class Dashboard extends React.Component {
       totalCount = data.datasets[tag].items.length;
       filteredStatus = this.groupByField(dataset.items,'status',6);
       filteredType = this.groupByField(dataset.items,'work_type',6);
-      monthlyData = this.groupByMonth(dataset.items, 'record_status_date');
+      this.counter = 0;
+      console.log("DS: " + JSON.stringify(dataset.definition.query));
+      monthlyData = this.groupByMonth(dataset.items, 'record_status_date',
+            dataset.definition.query.use_attributes);
 
     }
 //    console.log("Filtered Status : " + JSON.stringify(filteredStatus));

@@ -8,6 +8,18 @@ var month = ("0" + (now.getMonth() + 1)).slice(-2);
 var day = ("0" + now.getDate()).slice(-2);
 var years = [now.getFullYear()-1, now.getFullYear()];
 
+var simulateApi = false;
+var useBackupServer = true;
+var useAttributes = false;
+var main_url = null;
+if (useBackupServer) {
+  main_url = 'http://arcgis-arcgisserver1-1222684815.us-east-1.elb.amazonaws.com/arcgis/rest/services/opendata/FeatureServer/1/query';
+  useAttributes = true;
+}
+else {
+  main_url = 'http://arcgis.ashevillenc.gov/arcgis/rest/services/Permits/AshevillePermits/MapServer/0/query';
+}
+
 var config = {
   title: "City of Asheville Permits Dashboard",
   description: "The full data set includes all building permit activity in the " +
@@ -23,6 +35,7 @@ var config = {
     tag: 'active-permits',
     source_type: 'arcgis-rest',
     dataset_type: 'table',
+    simulate_api: simulateApi,
     /******* ProjectCommentary *********
       I've hard-coded the _where_ clause here and included only one other ArcGIS
       REST parameter that I thought I might actually use. In a production version,
@@ -31,12 +44,17 @@ var config = {
     */
     query: {
       maxRecordCount: 1000, // Not sure this belongs here, need to think how to generalize
-//      url: 'http://arcgis.ashevillenc.gov/arcgis/rest/services/Permits/AshevillePermits/MapServer/0/query',
-      url: 'http://arcgis-arcgisserver1-1222684815.us-east-1.elb.amazonaws.com/arcgis/rest/services/opendata/FeatureServer/1/query',
-      use_attributes: false, // false for the simulated or first url, true for the second.
+      url: main_url,
+      use_attributes: useAttributes, // false for the simulated or first url, true for the second.
+      fields:  "date_opened,record_status,record_status_date,"
+              + "record_type,record_type_group,record_type_category,record_type_type,"
+              + "record_type_subtype,latitude,longitude",
       where: `(record_status_date > date '${years[0]}-${month}-${day}' AND ` +
              ` record_status_date <= date '${years[1]}-${month}-${day}')`,
       returnGeometry: false
+    },
+    attribute_map: {
+
     }
   }
 };
