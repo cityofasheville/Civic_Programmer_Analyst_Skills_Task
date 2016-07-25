@@ -302,7 +302,6 @@ export default class Dashboard extends React.Component {
 
                 {attributes.map ( (att) => {
                   let moreSpan = null;
-                  let countSpan = null;
                   let visiblePanel = null;
                   if (att.expandable) {
                     const isVisible = (att.name in this.state.attVisible && this.state.attVisible[att.name]);
@@ -320,24 +319,35 @@ export default class Dashboard extends React.Component {
                         </span>
                       );
                     }
-                    countSpan = (
-                      <span><b># of Values:</b> &nbsp; {10}</span>
-                    );
-                    //console.log("STATE: " + JSON.stringify(this.state));
                     if (att.name in this.state.attVisible && this.state.attVisible[att.name]) {
                       let icnt = 0;
                       if (attValuesLists[att.name] != undefined && attValuesLists[att.name].length > 0) {
                         visiblePanel = (
-                          <div>
-                            <ul>
+                          <div className="container-fluid" style={{textAlign:"left", marginBottom:"10px"}}>
+                            <hr/>
+                              <div key={att.name+"-hdr"} className="row" style={{marginBottom:"5px"}}>
+                                <div className="col-md-1"></div>
+                                <div className="col-md-6">
+                                  <u><b>Name</b></u>
+                                </div>
+                                <div className="col-md-5">
+                                  <u><b># of Records</b></u>
+                                </div>
+                              </div>
+
                               {attValuesLists[att.name].map( (item) => {
                                 return (
-                                  <li key={att.name+"-"+icnt++}>
-                                    <b>{item.key}: </b> {item.value}
-                                  </li>
+                                  <div key={att.name+"-"+icnt++} className="row">
+                                    <div className="col-md-1"></div>
+                                    <div className="col-md-6">
+                                      {item.key}
+                                    </div>
+                                    <div className="col-md-5">
+                                      {item.value}
+                                    </div>
+                                  </div>
                                 );
                               })}
-                            </ul>
                           </div>
                         );
                       }
@@ -357,8 +367,7 @@ export default class Dashboard extends React.Component {
                       <div style={{textAlign:"left"}} className="col-md-8">
                         <p>{att.description}</p>
                         <p>
-                          <b>Field name:</b> &nbsp; {att.name}<br/>
-                          {countSpan}
+                          <b>Field name:</b> &nbsp; {att.name}
                           {moreSpan}
                         </p>
 
