@@ -44,13 +44,13 @@ function transformRecord(inR0, useAttributes) {
   let record = {
     name: inR.record_name,
     date_opened: inR.date_opened,
-    status: inR.record_status,
+    record_status: inR.record_status,
     record_status_date: inR.record_status_date,
-    group: translateModule(inR.record_type_group),
-    permit_type: inR.record_type_type,
-    category: inR.record_type_category,
-    work_type: inR.record_type,
-    work_subtype: inR.record_type_subtype,
+    record_type_group: translateModule(inR.record_type_group),
+    record_type_type: inR.record_type_type,
+    record_type_category: inR.record_type_category,
+    record_type: inR.record_type,
+    record_type_subtype: inR.record_type_subtype,
     latitude: inR.latitude,
     longitude: inR.longitude
   };

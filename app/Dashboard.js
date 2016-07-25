@@ -1,24 +1,36 @@
 import React, { PropTypes } from 'react';
-import { connect } from 'react-redux';
-import { store } from 'redux';
+import {connect} from 'react-redux';
+import {store} from 'redux';
+import {autobind} from 'core-decorators'
 import {fetchDataset} from './state/actions/DataActions';
 import ToggleButtonSet from './components/ToggleButtonSet';
 import PieChart from "./components/PieChart.js";
 import BarChart from "./components/BarChart.js";
 
 export default class Dashboard extends React.Component {
+  // name: inR.record_name,
+  // date_opened: inR.date_opened,
+  // status: inR.record_status,
+  // record_status_date: inR.record_status_date,
+  // group: translateModule(inR.record_type_group),
+  // permit_type: inR.record_type_type,
+  // category: inR.record_type_category,
+  // work_type: inR.record_type,
+  // work_subtype: inR.record_type_subtype,
+
   constructor(props) {
     super(props);
     let filters = {
-      status: [],
-      group: [],
-      permit_type: [],
-      category: [],
-      work_type: [],
-      work_subtype: []
+      record_status: [],
+      record_type_group: [],
+      record_type_type: [],
+      record_type_category: [],
+      record_type: [],
+      record_type_subtype: []
     }
     this.state = {
-      filters
+      filters,
+      attVisible: {}
     };
   }
 
@@ -152,15 +164,68 @@ export default class Dashboard extends React.Component {
     return shortList;
   }
 
+  @autobind
+  showValues(e) {
+    const id = e.currentTarget.id.substring(4);
+    let attVisible = {...this.state.attVisible};
+    attVisible[id] = true;
+    this.setState({attVisible});
+    console.log("I did it " + id);
+  }
+
+  @autobind
+  unShowValues(e) {
+    const id = e.currentTarget.id.substring(4);
+    let attVisible = {...this.state.attVisible};
+    attVisible[id] = false;
+    this.setState({attVisible});
+    console.log("I did it " + id);
+  }
+
+  generateAttValuesList(key, input, maxValues) {
+    console.log("ATT - key = " + key + " and maxValues = " + maxValues);
+    let cmap = {};
+    input.forEach( (r) => {
+      if (!(r[key] in cmap)) {
+        cmap[r[key]] = 1;
+      }
+      else {
+        cmap[r[key]] += 1;
+      }
+    });
+    let list = [];
+    for (let key in cmap) {
+      list.push({key: key, value: cmap[key]});
+    }
+    console.log("The initial list length is " + list.length);
+    list.sort( (a, b) => {
+      return (a.value<b.value)?1:((a.value>b.value)?-1:0);
+    });
+    let shortList = list.slice(0,maxValues);
+    let otherTotal = 0;
+    let otherCount = 0;
+    list.slice(maxValues).forEach((item)=> {
+      ++otherCount;
+      otherTotal += item.value;
+    });
+    if (otherTotal > 0) {
+      shortList.push({key: `${otherCount} other values`, value: otherTotal});
+    }
+
+    return shortList;
+  }
+
   render() {
     let {common, config, data} = this.props;
     let tag = config.dataset.tag;
     let dataset = {...data.datasets[tag]};
+    let attributes = [];
     let totalCount = 0, filteredCount=0;
     let filteredStatus = [], filteredType = [];
     let monthlyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
     let statusPie = null, typePie = null;
     let status_text = "Dataload initializing...";
+    let attValuesLists = {};
     // Run datasets through any filters that are defined.
     if ((dataset.status == 'add' || dataset.status == 'finish')) {
       if (dataset.status == 'add')
@@ -173,12 +238,17 @@ export default class Dashboard extends React.Component {
       totalCount = data.datasets[tag].items.length;
       filteredStatus = this.groupByField(dataset.items,'status',6);
       filteredType = this.groupByField(dataset.items,'work_type',6);
-      this.counter = 0;
       console.log("DS: " + JSON.stringify(dataset.definition.query));
       monthlyData = this.groupByMonth(dataset.items, 'record_status_date',
             dataset.definition.query.use_attributes);
-
+      console.log("DS-att: " + JSON.stringify(dataset.definition.attributes));
+      attributes = dataset.definition.attributes;
+      for (let attKey in this.state.attVisible) {
+        attValuesLists[attKey] = this.generateAttValuesList(attKey, dataset.items, dataset.definition.max_attribute_values_to_show);
+      }
     }
+
+
 //    console.log("Filtered Status : " + JSON.stringify(filteredStatus));
 //    console.log("Filtered Type: " + JSON.stringify(filteredType));
     let dataset_visit_link = (config.dataset_url == null)?"":
@@ -215,20 +285,93 @@ export default class Dashboard extends React.Component {
                 </p>
               </div>
               <div style={{float:"left"}}>
-                <ToggleButtonSet title="" options={this.groupButtonOptions('group')}/>
+                <ToggleButtonSet title="" options={this.groupButtonOptions('record_type_group')}/>
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                <ToggleButtonSet title="" options={this.typeButtonOptions('permit_type')}/>
+                <ToggleButtonSet title="" options={this.typeButtonOptions('record_type_type')}/>
               </div>
             </div>
           </div>
 
           <div className = "dash-explore-body row" style={{marginTop:"10px"}}>
             <div className="dash-explore-keyinfo col-md-6 col-xs-12"
-                  style={{borderStyle:"solid",
-                          borderWidth:"1px", borderColor:"lightgrey"
-                        }}>
+                 style={{borderStyle:"solid", borderWidth:"1px", borderColor:"lightgrey"}}>
               <div style={{textAlign:"center"}}>
                 <h3>Key Information in the Dataset</h3>
+                <div className="container-fluid dash-explore-keyinfo-list"
+                     style={{marginTop: "15px"}}>
+
+                {attributes.map ( (att) => {
+                  let moreSpan = null;
+                  let countSpan = null;
+                  let visiblePanel = null;
+                  if (att.expandable) {
+                    const isVisible = (att.name in this.state.attVisible && this.state.attVisible[att.name]);
+                    if (isVisible) {
+                      moreSpan = (
+                        <span style={{float:"right"}}>
+                          <a id={"att-"+att.name} onClick={this.unShowValues} className="btn"><i className="fa fa-lg fa-angle-double-up"></i></a>
+                        </span>
+                      );
+                    }
+                    else {
+                      moreSpan = (
+                        <span style={{float:"right"}}>
+                          <a id={"att-"+att.name} onClick={this.showValues} className="btn"><i className="fa fa-lg fa-angle-double-down"></i></a>
+                        </span>
+                      );
+                    }
+                    countSpan = (
+                      <span><b># of Values:</b> &nbsp; {10}</span>
+                    );
+                    //console.log("STATE: " + JSON.stringify(this.state));
+                    if (att.name in this.state.attVisible && this.state.attVisible[att.name]) {
+                      let icnt = 0;
+                      if (attValuesLists[att.name] != undefined && attValuesLists[att.name].length > 0) {
+                        visiblePanel = (
+                          <div>
+                            <ul>
+                              {attValuesLists[att.name].map( (item) => {
+                                return (
+                                  <li key={att.name+"-"+icnt++}>
+                                    <b>{item.key}: </b> {item.value}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        );
+                      }
+                      else {
+                        visiblePanel = <p>No values found.</p>
+                      }
+                    }
+                  }
+                  return (
+                    <div key={"att-key-" + att.name} className="row"
+                      style={{paddingTop:"5px", marginTop:"5px", borderStyle:"solid",
+                              borderWidth:"1px", borderColor:"lightblue",
+                              borderRadius: "15px"}}>
+                      <div style={{textAlign:"left", fontSize:"110%"}} className="col-md-4">
+                        <strong>{att.display}</strong>
+                      </div>
+                      <div style={{textAlign:"left"}} className="col-md-8">
+                        <p>{att.description}</p>
+                        <p>
+                          <b>Field name:</b> &nbsp; {att.name}<br/>
+                          {countSpan}
+                          {moreSpan}
+                        </p>
+
+                      </div>
+                      <div className="col-md-12">
+                       {visiblePanel}
+                      </div>
+                    </div>
+                  )
+                })}
+
+
+                </div>
               </div>
             </div>
             <div className="dash-explore-quickview col-md-6 col-xs-12"

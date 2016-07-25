@@ -53,9 +53,83 @@ var config = {
              ` record_status_date <= date '${years[1]}-${month}-${day}')`,
       returnGeometry: false
     },
-    attribute_map: {
-
-    }
+    max_attribute_values_to_show: 50,
+    attributes: [
+      {
+        name: "date_opened",
+        display: "Date Opened",
+        description: "The date the permit was first opened.",
+        expandable: false
+      },
+      {
+        name: "record_status",
+        display: "Status",
+        description: "Current status of the permit.",
+        expandable: true
+      },
+      {
+        name: "record_status_date",
+        display: "State Date",
+        description: "The date the permit status was last updated.",
+        expandable: false
+      },
+      {
+        name: "record_type_group",
+        display: "Major Type",
+        description: "Top-level type indicating whether the permit is for " +
+                     "construction ('Permits'), planning ('Planning') or " +
+                     "enforcement ('Services'). ",
+        expandable: true
+      },
+      {
+        name: "record_type_type",
+        display: "Primary Category",
+        description: "High-level category of the permit, e.g., residential, commercial, etc.",
+        expandable: true
+      },
+      {
+        name: "record_type_subtype",
+        display: "Secondary Category",
+        description: "Sub-category of the permit, e.g., trade, existing building, new building, etc..",
+        expandable: true
+      },
+      {
+        name: "record_type",
+        display: "Work Type",
+        description: "General class of work to be performed under the permit.",
+        expandable: true
+      },
+      {
+        name: "record_name",
+        display: "Name",
+        description: "Name of the person or entity to whom the permit was issued.",
+        expandable: false
+      },
+      {
+        name: "record_address",
+        display: "Address",
+        description: "Address for which the permit was issued.",
+        expandable: false
+      },
+      {
+        name: "record_description",
+        display: "Description",
+        description: "Narrative description of the permit circumstances.",
+        expandable: false
+      },
+      {
+        name: "latitude",
+        display: "Latitude",
+        description: "The latitude of the permitted location.",
+        expandable: false
+      },
+      {
+        name: "longitude",
+        display: "Longitude",
+        description: "The longitude of the permitted location.",
+        expandable: false
+      }
+    ]
   }
 };
 
