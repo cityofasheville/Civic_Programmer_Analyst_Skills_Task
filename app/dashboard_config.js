@@ -58,6 +58,7 @@ var config = {
       returnGeometry: false
     }
   },
+
   ///////////////////////////////////////////////////////////////////
   // Page filters specification:
   //  This is used to create the sets of buttons at the top of the
@@ -184,6 +185,51 @@ var config = {
       description: "The longitude of the permitted location.",
       expandable: false
     }
+  ],
+
+  ///////////////////////////////////////////////////////////////////
+  // Attributes specification:
+  //  This is primarily used to drive the _Key Dataset Information_
+  //  section, although the display names could be used in other
+  //  places.
+  //
+  //  The _expandable_ attribute lets the user expand the attribute
+  //  description to see up to _max_attribute_values_to_show_ values
+  //  in order of descending use frequency.
+  ///////////////////////////////////////////////////////////////////
+
+  quickview: [
+    {
+      title: "Past Year Activity By Month",
+      type: "bar",
+      transform: {
+        type: "count_by_field",
+        field: "record_status_date",
+        field_type: "date",
+        period: "month"
+      }
+    },
+    {
+      title: "Top Status Values",
+      type: "pie",
+      transform: {
+        type: "count_by_field",
+        field: "record_status",
+        field_type: "string",
+        max_values: 6
+      }
+    },
+    {
+      title: "Top Work Type Values",
+      type: "pie",
+      transform: {
+        type: "count_by_field",
+        field: "record_type",
+        field_type: "string",
+        max_values: 6
+      }
+    }
+
   ]
 };
 

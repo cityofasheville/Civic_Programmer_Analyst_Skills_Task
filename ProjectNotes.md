@@ -6,6 +6,8 @@ Dataset discovery page.  Solve own problem.
 
 ## Approach
 
+Use the process of building a dashboard to grasp the dataset in order to present it better in the dashboard.
+
 
 ## Installation
 

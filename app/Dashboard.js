@@ -79,62 +79,6 @@ export default class Dashboard extends React.Component {
                             title={spec.name} marginRight="15px"/>
   }
 
-  groupByMonth (input, field, use_attributes) {
-    let monthlyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let counter = 0;
-    let errCount = 0;
-    input.forEach( (r) => {
-      let month = 0;
-      ++counter;
-      try {
-        let d;
-        if (use_attributes) {
-          d = new Date(r[field] + 0);
-        }
-        else {
-          d = new Date(Date.parse(r[field])); // this is the date.
-        }
-        month = d.getMonth();
-      }
-      catch (err) {
-        if (errCount < 20) console.log("Error in groupByMonth" + r[field]);
-        ++errCount;
-        month = 0; // We'll just let the month be 0 for now.
-      }
-      monthlyData[month] += 1;
-    });
-    return monthlyData;
-  }
-
-  groupByField (input, field, maxCategories) {
-    let data = [];
-    let cmap = {}
-    input.forEach( (r) => {
-      if (!(r[field] in cmap)) {
-        cmap[r[field]] = 1;
-      }
-      else {
-        cmap[r[field]] += 1;
-      }
-    });
-    let list = [];
-    for (let key in cmap) {
-      list.push({key: key, value: cmap[key]});
-    }
-    list.sort( (a, b) => {
-      return (a.value<b.value)?1:((a.value>b.value)?-1:0);
-    });
-    let shortList = list.slice(0,maxCategories);
-    let otherTotal = 0;
-    list.slice(maxCategories).forEach((item)=> {
-      otherTotal += item.value;
-    });
-    if (otherTotal > 0) {
-      shortList.push({key: "Other", value: otherTotal});
-    }
-    return shortList;
-  }
-
   @autobind
   showValues(e) {
     const id = e.currentTarget.id.substring(4);
@@ -182,6 +126,126 @@ export default class Dashboard extends React.Component {
     return shortList;
   }
 
+  groupByMonth (input, field) {
+    // This is silly, but the ArcGIS server SimpliCity uses
+    // uses simple unix time, while the open data portal one
+    // uses a date string. Just a hack for now - should be part of
+    // the data source configuration setup (and probably should
+    // be translated to common format as it's being processed in).
+    let unixDate = this.props.config.dataset.query.use_attributes;
+    let monthlyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let counter = 0;
+    let errCount = 0;
+    if (input == null || input == undefined) return null;
+    input.forEach( (r) => {
+      let month = 0;
+      ++counter;
+      try {
+        let d;
+        if (unixDate) {
+          d = new Date(r[field] + 0);
+        }
+        else {
+          d = new Date(Date.parse(r[field])); // this is the date.
+        }
+        month = d.getMonth();
+      }
+      catch (err) {
+        if (errCount < 20) console.log("Error in groupByMonth" + r[field]);
+        ++errCount;
+        month = 0; // We'll just let the month be 0 for now.
+      }
+      monthlyData[month] += 1;
+    });
+    return monthlyData;
+  }
+
+  groupByStringField (input, field, maxCategories) {
+    let data = [];
+    let cmap = {}
+    if (input == null || input == undefined) return null;
+    input.forEach( (r) => {
+      if (!(r[field] in cmap)) {
+        cmap[r[field]] = 1;
+      }
+      else {
+        cmap[r[field]] += 1;
+      }
+    });
+    let list = [];
+    for (let key in cmap) {
+      list.push({key: key, value: cmap[key]});
+    }
+    list.sort( (a, b) => {
+      return (a.value<b.value)?1:((a.value>b.value)?-1:0);
+    });
+    let shortList = list.slice(0,maxCategories);
+    let otherTotal = 0;
+    list.slice(maxCategories).forEach((item)=> {
+      otherTotal += item.value;
+    });
+    if (otherTotal > 0) {
+      shortList.push({key: "Other", value: otherTotal});
+    }
+    return shortList;
+  }
+
+  countByField (input, transform) {
+    let data = null;
+    if (transform.field_type == "string") {
+      data = this.groupByStringField (input,transform.field,transform.max_values);
+    }
+    else if (transform.field_type == "date") {
+      if (transform.period == "month") {
+        data = {
+          labels: ["1Jan","Feb","Mar", "Apr", "May", "Jun", "Jul",
+                   "Aug", "Sep", "Oct", "Nov", "Dec"],
+          values: this.groupByMonth(input, transform.field)
+        }
+      }
+      else {
+        console.log(`countByField: unknown period ${transform.period} for date field`);
+      }
+    }
+    return data;
+  }
+
+  // Obviously this all needs a little generalization
+  createQuickview (spec, input) {
+    let data = input;
+    if ('transform' in spec && spec.transform) {
+      if (spec.transform.type == 'count_by_field') {
+        data = this.countByField(input, spec.transform);
+      }
+      else {
+        console.log("createQuickView: unknown transform type " + spec.transform.type);
+        return null;
+      }
+    }
+    if (data == null) return data;
+
+    switch (spec.type) {
+
+      case 'pie':
+        {
+          return <PieChart data={data} title={spec.title}/>
+        }
+        break;
+      case 'bar':
+        {
+          if (data.values == null) return null;
+          return <BarChart data={data.values} labels={data.labels} title={spec.title}/>
+        }
+        break;
+      default:
+        {
+          console.log("Unknown QuickView type " + spec.type);
+          return null;
+        }
+    }
+    return
+  }
+
   render() {
     let {common, config, data} = this.props;
     let tag = config.dataset.tag;
@@ -203,10 +267,9 @@ export default class Dashboard extends React.Component {
       dataset = this.filterDataset(data.datasets[tag], this.state.filters);
       filteredCount = dataset.items.length;
       totalCount = data.datasets[tag].items.length;
-      filteredStatus = this.groupByField(dataset.items,'record_status',6);
-      filteredType = this.groupByField(dataset.items,'record_type',6);
-      monthlyData = this.groupByMonth(dataset.items, 'record_status_date',
-                                      config.dataset.query.use_attributes);
+      filteredStatus = this.groupByStringField(dataset.items,'record_status',6);
+      filteredType = this.groupByStringField(dataset.items,'record_type',6);
+      monthlyData = this.groupByMonth(dataset.items, 'record_status_date');
       attributes = config.attributes;
       pagefilters = config.pagefilters;
       for (let attKey in this.state.attVisible) {
@@ -240,7 +303,7 @@ export default class Dashboard extends React.Component {
               <h2>{config.explore_title}</h2>
             </div>
             <div className="col-md-12" style={{height:"40px"}} >
-              <div style={{float:"right"}}>
+              <div style={{float:"right", marginTop:"15px"}}>
                 <p style={{lineHeight:"40px"}}>
                    <b>Total:</b> {totalCount} &nbsp;&nbsp;
                    <b>Filtered:</b> {filteredCount}
@@ -258,7 +321,7 @@ export default class Dashboard extends React.Component {
             </div>
           </div>
 
-          <div className = "dash-explore-body row" style={{marginTop:"10px"}}>
+          <div className = "dash-explore-body row" style={{marginTop:"25px"}}>
             <div className="dash-explore-keyinfo col-md-6 col-xs-12"
                  style={{borderStyle:"none", borderWidth:"1px", borderColor:"lightgrey"}}>
               <div style={{textAlign:"center"}}>
@@ -357,15 +420,14 @@ export default class Dashboard extends React.Component {
                 <h3>Quick View</h3>
               </div>
               <div className="row">
-              <div className="col-md-12 col-sm-12">
-                <BarChart data={monthlyData} title="Past Year Activity By Month"/>
-              </div>
-              <div className="col-md-12 col-sm-12">
-                <PieChart data={filteredStatus} title="Top Status Values"/>
-              </div>
-              <div className="col-md-12 col-sm-12">
-                <PieChart data={filteredType} title="Top Type Values"/>
-              </div>
+                {config.quickview.map ((spec, index) => {
+                  return (
+                    <div key={"qv-"+index} className="col-md-12" style={{marginBottom: "35px"}}>
+                      {this.createQuickview(spec, dataset.items)}
+                    </div>
+                  )
+                })}
+                <hr/>
               </div>
 
               <br/>

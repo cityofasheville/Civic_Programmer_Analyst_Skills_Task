@@ -12,20 +12,12 @@ class PieChart extends Component {
     this.savedDiv = null;
     this.savedChart = null;
     this.chartData = {
-      labels: ["Red","Blue","Yellow"],
+      labels: [],
       datasets: [
           {
-              data: [300, 50, 100],
-              backgroundColor: [
-                  "#FF6384",
-                  "#36A2EB",
-                  "#FFCE56"
-              ],
-              hoverBackgroundColor: [
-                  "#FF6384",
-                  "#36A2EB",
-                  "#FFCE56"
-              ]
+              data: [],
+              backgroundColor: [],
+              hoverBackgroundColor: []
           }]
     };
     this.chartOptions = {
@@ -38,7 +30,8 @@ class PieChart extends Component {
       },
       title: {
         display: true,
-        text: "Hello there"
+        fontSize: 18,
+        text: ""
       }
     };
   }
@@ -68,14 +61,11 @@ class PieChart extends Component {
   }
 
     componentDidUpdate() {
-      //console.log("I'm in componentDidUpdate");
       let el = this.savedDiv;
       if (this.savedChart != null) {
-        //console.log("Now we destroy!");
         this.savedChart.destroy();
         this.savedChart = null;
       }
-      //console.log("On we go");
       if (el != null) {
         let myChart = new Chart(el, {
           type: 'pie',
@@ -92,7 +82,6 @@ class PieChart extends Component {
 
     render() {
       const {data} = this.props;
-      // console.log("Here's the data: " + JSON.stringify(data));
       let colorIndex = 0;
       const colors = [
         "#5DA5DA", // (blue)

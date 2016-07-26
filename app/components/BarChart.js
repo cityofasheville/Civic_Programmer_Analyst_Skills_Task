@@ -10,40 +10,14 @@ class BarChart extends Component {
     this.savedDiv = null;
     this.savedChart = null;
     this.chartData = {
-      labels: ["Jan","Feb","Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      labels: [],
       datasets: [
-          {
-            backgroundColor: [
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA",
-                "#5DA5DA"
-            ],
-            borderColor: [
-              "#777777",
-              "#777777",
-              "#777777",
-              "#777777",
-              "#777777",
-              "#777777",
-              "#777777",
-              "#777777",
-              "#777777",
-              "#777777",
-              "#777777",
-              "#777777"
-            ],
-            borderWidth: 1,
-            data: [300, 50, 100, 100, 200, 300, 240, 122, 881, 401, 365, 22]
-          }]
+        {
+          backgroundColor: [],
+          borderColor: [],
+          borderWidth: 1,
+          data: []
+        }]
     };
     this.chartOptions = {
       responsive: true,
@@ -55,7 +29,8 @@ class BarChart extends Component {
       },
       title: {
         display: true,
-        text: "Hello there"
+        fontSize: 18,
+        text: ""
       }
     };
   }
@@ -82,74 +57,58 @@ class BarChart extends Component {
     }
   }
 
-    componentDidUpdate() {
-      let el = this.savedDiv;
-      if (this.savedChart != null) {
-        this.savedChart.destroy();
-        this.savedChart = null;
-      }
-
-      if (el != null) {
-        let myChart = new Chart(el, {
-          type: 'bar',
-          data: this.chartData,
-          options: this.chartOptions
-        });
-        this.savedChart = myChart;
-      }
+  componentDidUpdate() {
+    let el = this.savedDiv;
+    if (this.savedChart != null) {
+      this.savedChart.destroy();
+      this.savedChart = null;
     }
 
-    componentWillUnmount () {
-        $(".bar-tooltip").remove();
+    if (el != null) {
+      let myChart = new Chart(el, {
+        type: 'bar',
+        data: this.chartData,
+        options: this.chartOptions
+      });
+      this.savedChart = myChart;
     }
+  }
 
-    render() {
-      const {data} = this.props;
-      let colorIndex = 0;
-      const colors = [
-        "#5DA5DA", // (blue)
-        "#FAA43A", // (orange)
-        "#60BD68", // (green)
-        "#F17CB0", // (pink)
-        "#B2912F", // (brown)
-        "#B276B2", // (purple)
-        "#DECF3F", // (yellow)
-        "#F15854", // (red)
-        "#4D4D4D"  // (gray)
-      ];
+  componentWillUnmount () {
+      $(".bar-tooltip").remove();
+  }
 
-      // let labels = [];
-      // let ds = {
-      //   data: [],
-      //   backgroundColor: [],
-      //   hoverBackgroundColor: []
-      // };
-      // data.forEach( (item) => {
-      //   labels.push(item.key);
-      //   ds.data.push(item.value + 0);
-      //   ds.backgroundColor.push(colors[colorIndex]);
-      //   ds.hoverBackgroundColor.push(colors[colorIndex]);
-      //   ++colorIndex;
-      //   if (colorIndex >= colors.length) colorIndex = 0;
-      // });
-      //
-      // this.chartData = {
-      //   labels: labels,
-      //   datasets: [ds],
-      // };
-      this.chartData.datasets[0].data = data;
-      this.chartOptions.title.text = this.props.title;
-      return (
-          <div>
-              <canvas  ref={this.saveDiv}></canvas>
-          </div>
-      )
-    }
+  render() {
+    const {data, labels} = this.props;
+    let colorIndex = 0;
+    const colors = [
+      "#5DA5DA", // (blue)
+      "#FAA43A", // (orange)
+      "#60BD68", // (green)
+      "#F17CB0", // (pink)
+      "#B2912F", // (brown)
+      "#B276B2", // (purple)
+      "#DECF3F", // (yellow)
+      "#F15854", // (red)
+      "#4D4D4D"  // (gray)
+    ];
+    this.chartData.labels = labels;
+    this.chartData.datasets[0].data = data;
+    this.chartData.datasets[0].backgroundColor = new Array(data.length).fill("#5DA5DA");
+    this.chartData.datasets[0].borderColor = new Array(data.length).fill("#777777");
+    this.chartOptions.title.text = this.props.title;
+    return (
+        <div>
+            <canvas  ref={this.saveDiv}></canvas>
+        </div>
+    )
+  }
 }
 
 BarChart.PropTypes= {
-    data: React.PropTypes.array.isRequired,
-    title: React.PropTypes.string.isRequired
+  data: React.PropTypes.array.isRequired,
+  labels: React.PropTypes.array.isRequired,
+  title: React.PropTypes.string.isRequired
 };
 
 export default BarChart;
