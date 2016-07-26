@@ -11,34 +11,20 @@ export default class Dashboard extends React.Component {
 
   constructor(props) {
     super(props);
-    let filters = {
-      record_status: {
-        include: true,
-        filter: []
-      },
-      record_type_group: {
-        include: true,
-        filter: []
-      },
-      record_type_type: {
-        include: true,
-        filter: []
-      },
-      record_type_category: {
-        include: true,
-        filter: []
-      },
-      record_type: {
-        include: true,
-        filter: []
-      },
-      record_type_subtype: {
-        include: true,
-        filter: []
-      }
-    }
+
+    let filters = {};
+    let filterButtonStates = {};
+    props.config.pagefilters.forEach ( (pf) => {
+      filters[pf.field] = {
+        filter: [],
+        include: true
+      };
+      filterButtonStates[pf.field] = 0;
+    });
+
     this.state = {
       filters,
+      filterButtonStates,
       attVisible: {}
     };
   }
@@ -68,43 +54,29 @@ export default class Dashboard extends React.Component {
       }
       return keep;
     }, this);
-    console.log("Post-filter length: " + ds.items.length);
     return ds;
   }
 
-  setFilter(field, value) {
-    console.log("Set filter with field " + field + ", value " + JSON.stringify(value));
+  setFilter(field, def, index) {
     let filters = {...this.state.filters};
-    filters[field].filter = value;
-    this.setState({filters: filters});
+    filters[field].filter = def.filter;
+    filters[field].include = def.include;
+    let filterButtonStates = {...this.state.filterButtonStates};
+    filterButtonStates[field] = index;
+    this.setState({filters, filterButtonStates});
   }
 
   createToggleButtonSet (spec) {
-//    <ToggleButtonSet title="" options={this.groupButtonOptions('record_type_group')}/>
+    let buttonSpecs = spec.buttons.map( (def, index) => {
+      return {
+        name: def.name,
+        active: (this.state.filterButtonStates[spec.field] == index),
+        action: this.setFilter.bind(this, spec.field, def, index)
+      };
+    });
 
-  }
-  groupButtonOptions (field) {
-    const fmap = {Construction: 1, Planning: 2, Enforcement: 3};
-    let index = (fmap[this.state.filters[field]] || 0);
-    return (
-      [
-        {name: "All", active: index == 0, action: this.setFilter.bind(this, field, [])},
-        {name: "Construction", active: index == 1, action: this.setFilter.bind(this,field,["Construction"])},
-        {name: "Planning", active: index == 2, action:this.setFilter.bind(this,field,["Planning"])},
-        {name: "Enforcement", active: index == 3, action:this.setFilter.bind(this,field,["Enforcement"])}
-      ]
-    );
-  }
-
-  typeButtonOptions (field, names, values) {
-    return (
-      [
-        {name: "All", active: true, action:undefined},
-        {name: "Commercial", active: false, action: undefined},
-        {name: "Residential", active: false, action:undefined},
-        {name: "Other", active: false, action:undefined}
-      ]
-    );
+    return <ToggleButtonSet key={"bs-"+spec.field} title="" options={buttonSpecs}
+                            title={spec.name} marginRight="15px"/>
   }
 
   groupByMonth (input, field, use_attributes) {
@@ -160,7 +132,6 @@ export default class Dashboard extends React.Component {
     if (otherTotal > 0) {
       shortList.push({key: "Other", value: otherTotal});
     }
-    //console.log("Short list is " + JSON.stringify(shortList));
     return shortList;
   }
 
@@ -170,7 +141,6 @@ export default class Dashboard extends React.Component {
     let attVisible = {...this.state.attVisible};
     attVisible[id] = true;
     this.setState({attVisible});
-    console.log("I did it " + id);
   }
 
   @autobind
@@ -179,11 +149,9 @@ export default class Dashboard extends React.Component {
     let attVisible = {...this.state.attVisible};
     attVisible[id] = false;
     this.setState({attVisible});
-    console.log("I did it " + id);
   }
 
   generateAttValuesList(key, input, maxValues) {
-    console.log("ATT - key = " + key + " and maxValues = " + maxValues);
     let cmap = {};
     input.forEach( (r) => {
       if (!(r[key] in cmap)) {
@@ -197,7 +165,6 @@ export default class Dashboard extends React.Component {
     for (let key in cmap) {
       list.push({key: key, value: cmap[key]});
     }
-    console.log("The initial list length is " + list.length);
     list.sort( (a, b) => {
       return (a.value<b.value)?1:((a.value>b.value)?-1:0);
     });
@@ -233,20 +200,17 @@ export default class Dashboard extends React.Component {
         status_text = "Data loading ...";
       else
         status_text = "All data loaded";
-      console.log("Filtering from item count " + data.datasets[tag].items.length);
       dataset = this.filterDataset(data.datasets[tag], this.state.filters);
       filteredCount = dataset.items.length;
       totalCount = data.datasets[tag].items.length;
       filteredStatus = this.groupByField(dataset.items,'record_status',6);
       filteredType = this.groupByField(dataset.items,'record_type',6);
-      console.log("DS: " + JSON.stringify(dataset.definition.query));
       monthlyData = this.groupByMonth(dataset.items, 'record_status_date',
-            dataset.definition.query.use_attributes);
-      console.log("DS-att: " + JSON.stringify(dataset.definition.attributes));
-      attributes = dataset.definition.attributes;
-      pagefilters = dataset.definition.pagefilters;
+                                      config.dataset.query.use_attributes);
+      attributes = config.attributes;
+      pagefilters = config.pagefilters;
       for (let attKey in this.state.attVisible) {
-        attValuesLists[attKey] = this.generateAttValuesList(attKey, dataset.items, dataset.definition.max_attribute_values_to_show);
+        attValuesLists[attKey] = this.generateAttValuesList(attKey, dataset.items, config.max_attribute_values_to_show);
       }
     }
 
@@ -269,6 +233,7 @@ export default class Dashboard extends React.Component {
             <p style={{marginTop:"10px", marginLeft:"25px", marginRight:"25px"}}>{config.description}</p>
           </div>
         </div>
+
         <div className="container dash-main" style={{marginLeft:"10px",marginRight:"10px"}}>
           <div className = "row dash-explore-header">
             <div className="col-md-12" style={{marginBottom:"20px"}}>
@@ -284,14 +249,14 @@ export default class Dashboard extends React.Component {
                 </p>
               </div>
               <div style={{float:"left"}}>
-                <ToggleButtonSet title="" options={this.groupButtonOptions('record_type_group')}/>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <ToggleButtonSet title="" options={this.typeButtonOptions('record_type_type')}/>
+                {
+                  pagefilters.map ( (pfilter) => {
+                    return this.createToggleButtonSet(pfilter);
+                  })
+                }
               </div>
             </div>
           </div>
-
-
 
           <div className = "dash-explore-body row" style={{marginTop:"10px"}}>
             <div className="dash-explore-keyinfo col-md-6 col-xs-12"

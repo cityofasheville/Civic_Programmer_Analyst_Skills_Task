@@ -40,13 +40,11 @@ export default function data (state = {datasets: {}, filters: {}}, action) {
         case "add":
           ds.status = 'add';
           ds.items = [].concat(ds.items).concat(action.data.items);
-          console.log("NOW ds items length = " + ds.items.length);
           break;
 
         case "finish":
           ds.status = 'finish';
           ds.items = [].concat(ds.items).concat(action.data.items);
-          console.log("FINAL ds items length = " + ds.items.length);
           break;
 
         case "error":

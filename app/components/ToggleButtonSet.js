@@ -27,7 +27,9 @@ class ToggleButtonSet extends Component {
                    <div className="small"><strong>{this.props.title}:</strong></div>:
                    "");
     return (
-        <div className="btn-group" role="group" aria-label={this.props.title}>
+        <div className="btn-group" role="group" aria-label={this.props.title}
+             style={{marginLeft:this.props.marginLeft, marginRight:this.props.marginRight}}>
+          <div style={{marginBottom:"3px"}} className="small"><strong>{this.props.title}</strong></div>
           {buttons}
         </div>
     );
@@ -35,8 +37,9 @@ class ToggleButtonSet extends Component {
 }
 
 ToggleButtonSet.defaultProps = {
-  columns: 4,
-  title: "ToggleButtonSet"
+  title: "",
+  marginLeft: "0px",
+  marginRight: "0px"
 }
 
 export default ToggleButtonSet;
