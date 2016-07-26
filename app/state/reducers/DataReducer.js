@@ -1,7 +1,6 @@
 import * as types from '../actions/ActionTypes';
 
 export default function data (state = {datasets: {}, filters: {}}, action) {
-  console.log("I have an action in DataReducer: " + action.type);
   switch (action.type) {
     case types.SET_FILTER:
     {
@@ -27,14 +26,14 @@ export default function data (state = {datasets: {}, filters: {}}, action) {
     }
     case types.UPDATE_DATASET:
     {
-      console.log("Update dataset, operation = " + action.data.operation);
+      //console.log("Update dataset, operation = " + action.data.operation);
       let tmpDatasets = {};
       let ds = {...state.datasets[action.data.tag]};
       switch (action.data.operation) {
         case "count":
           ds.status = 'count';
           ds.count = action.data.count;
-          console.log("Expected count is " + ds.count);
+          //console.log("Expected count is " + ds.count);
           break;
 
         case "add":
