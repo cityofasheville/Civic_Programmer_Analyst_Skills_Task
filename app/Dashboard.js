@@ -8,25 +8,34 @@ import PieChart from "./components/PieChart.js";
 import BarChart from "./components/BarChart.js";
 
 export default class Dashboard extends React.Component {
-  // name: inR.record_name,
-  // date_opened: inR.date_opened,
-  // status: inR.record_status,
-  // record_status_date: inR.record_status_date,
-  // group: translateModule(inR.record_type_group),
-  // permit_type: inR.record_type_type,
-  // category: inR.record_type_category,
-  // work_type: inR.record_type,
-  // work_subtype: inR.record_type_subtype,
 
   constructor(props) {
     super(props);
     let filters = {
-      record_status: [],
-      record_type_group: [],
-      record_type_type: [],
-      record_type_category: [],
-      record_type: [],
-      record_type_subtype: []
+      record_status: {
+        include: true,
+        filter: []
+      },
+      record_type_group: {
+        include: true,
+        filter: []
+      },
+      record_type_type: {
+        include: true,
+        filter: []
+      },
+      record_type_category: {
+        include: true,
+        filter: []
+      },
+      record_type: {
+        include: true,
+        filter: []
+      },
+      record_type_subtype: {
+        include: true,
+        filter: []
+      }
     }
     this.state = {
       filters,
@@ -34,55 +43,46 @@ export default class Dashboard extends React.Component {
     };
   }
 
+  // Load the datasets on mount
   componentWillMount() {
     fetchDataset(this.props.config.dataset, this.props.dispatch);
   }
-  /*
-    These appear to be good options for charts:
-      - http://www.reactd3.org/
-      - https://github.com/rma-consulting/react-easy-chart
-  */
 
-  filterDataset (ds0, filter, include) {
+  filterDataset (ds0, filter) {
     let ds = {...ds0};
-    if (include) {
-      ds.items = ds0.items.filter( (object) => {
-        let keep = true;
-        for (let key in filter) {
-          if (filter[key].length <= 0) continue; // Nothing to filter
-          keep = filter[key].some( (val) => {
+    ds.items = ds0.items.filter( (object) => {
+      let keep = true;
+      for (let key in filter) {
+        if (filter[key].filter.length <= 0) continue; // Nothing to filter
+        if (filter[key].include) {
+          keep = filter[key].filter.some( (val) => {
             return (object[key] == val);
           }); // Throw out if it matches any value
-          if (!keep) return keep;
         }
-        return keep;
-      }, this);
-      console.log("Post-filter length: " + ds.items.length);
-    }
-    else {
-      ds.items = ds0.items.filter( (object) => {
-        let keep = true;
-        for (let key in filter) {
-          if (filter[key].length <= 0) continue; // Nothing to filter
-          keep = filter[key].every( (val) => {
+        else {
+          keep = filter[key].filter.every( (val) => {
             return (object[key] != val);
           }); // Throw out if it matches any value
-          if (!keep) return keep;
         }
-        return keep;
-      }, this);
-      console.log("Post-filter length: " + ds.items.length);
-    }
+        if (!keep) return keep;
+      }
+      return keep;
+    }, this);
+    console.log("Post-filter length: " + ds.items.length);
     return ds;
   }
 
   setFilter(field, value) {
     console.log("Set filter with field " + field + ", value " + JSON.stringify(value));
     let filters = {...this.state.filters};
-    filters[field] = value;
+    filters[field].filter = value;
     this.setState({filters: filters});
   }
 
+  createToggleButtonSet (spec) {
+//    <ToggleButtonSet title="" options={this.groupButtonOptions('record_type_group')}/>
+
+  }
   groupButtonOptions (field) {
     const fmap = {Construction: 1, Planning: 2, Enforcement: 3};
     let index = (fmap[this.state.filters[field]] || 0);
@@ -226,6 +226,7 @@ export default class Dashboard extends React.Component {
     let statusPie = null, typePie = null;
     let status_text = "Dataload initializing...";
     let attValuesLists = {};
+    let pagefilters = [];
     // Run datasets through any filters that are defined.
     if ((dataset.status == 'add' || dataset.status == 'finish')) {
       if (dataset.status == 'add')
@@ -233,7 +234,7 @@ export default class Dashboard extends React.Component {
       else
         status_text = "All data loaded";
       console.log("Filtering from item count " + data.datasets[tag].items.length);
-      dataset = this.filterDataset(data.datasets[tag], this.state.filters, true);
+      dataset = this.filterDataset(data.datasets[tag], this.state.filters);
       filteredCount = dataset.items.length;
       totalCount = data.datasets[tag].items.length;
       filteredStatus = this.groupByField(dataset.items,'record_status',6);
@@ -243,14 +244,12 @@ export default class Dashboard extends React.Component {
             dataset.definition.query.use_attributes);
       console.log("DS-att: " + JSON.stringify(dataset.definition.attributes));
       attributes = dataset.definition.attributes;
+      pagefilters = dataset.definition.pagefilters;
       for (let attKey in this.state.attVisible) {
         attValuesLists[attKey] = this.generateAttValuesList(attKey, dataset.items, dataset.definition.max_attribute_values_to_show);
       }
     }
 
-
-//    console.log("Filtered Status : " + JSON.stringify(filteredStatus));
-//    console.log("Filtered Type: " + JSON.stringify(filteredType));
     let dataset_visit_link = (config.dataset_url == null)?"":
                              (<span style={{float:"right", marginTop:"25px"}}>
                               <a href={config.dataset_url}>Visit this dataset</a></span>);
@@ -292,11 +291,13 @@ export default class Dashboard extends React.Component {
             </div>
           </div>
 
+
+
           <div className = "dash-explore-body row" style={{marginTop:"10px"}}>
             <div className="dash-explore-keyinfo col-md-6 col-xs-12"
-                 style={{borderStyle:"solid", borderWidth:"1px", borderColor:"lightgrey"}}>
+                 style={{borderStyle:"none", borderWidth:"1px", borderColor:"lightgrey"}}>
               <div style={{textAlign:"center"}}>
-                <h3>Key Information in the Dataset</h3>
+                <h3>Key Dataset Information </h3>
                 <div className="container-fluid dash-explore-keyinfo-list"
                      style={{marginTop: "15px"}}>
 
@@ -384,7 +385,7 @@ export default class Dashboard extends React.Component {
               </div>
             </div>
             <div className="dash-explore-quickview col-md-6 col-xs-12"
-              style={{borderStyle:"solid",
+              style={{borderStyle:"none",
                       borderWidth:"1px", borderColor:"lightgrey"
                     }}>
               <div style={{textAlign:"center"}}>

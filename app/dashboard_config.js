@@ -1,7 +1,6 @@
-// Actually we should make this a class that can return a dataset by handle,
-// so that we can just refer to the handles in the vis components.
-// Also need ability to get all. Maybe just have this be part of the constructor
-// for this class.
+//////////////////////////////
+// Some setup
+//////////////////////////////
 
 var now = new Date();
 var month = ("0" + (now.getMonth() + 1)).slice(-2);
@@ -9,16 +8,20 @@ var day = ("0" + now.getDate()).slice(-2);
 var years = [now.getFullYear()-1, now.getFullYear()];
 
 var simulateApi = false;
-var useBackupServer = true;
+var useBackupServer = true; // Uses the AWS server that SimpliCity uses
 var useAttributes = false;
 var main_url = null;
 if (useBackupServer) {
   main_url = 'http://arcgis-arcgisserver1-1222684815.us-east-1.elb.amazonaws.com/arcgis/rest/services/opendata/FeatureServer/1/query';
-  useAttributes = true;
+  useAttributes = true; // There are a few format differences on this server
 }
 else {
   main_url = 'http://arcgis.ashevillenc.gov/arcgis/rest/services/Permits/AshevillePermits/MapServer/0/query';
 }
+
+//////////////////////////////
+// The configuration
+//////////////////////////////
 
 var config = {
   title: "City of Asheville Permits Dashboard",
@@ -32,16 +35,17 @@ var config = {
   dataset_url: "http://data.ashevillenc.gov/datasets/0b8ff99cce324fb58c81d5433ae883cf_0",
   explore_title: "Explore Permits Active in the Past Year",
   dataset: {
-    tag: 'active-permits',
-    source_type: 'arcgis-rest',
-    dataset_type: 'table',
-    simulate_api: simulateApi,
-    /******* ProjectCommentary *********
-      I've hard-coded the _where_ clause here and included only one other ArcGIS
-      REST parameter that I thought I might actually use. In a production version,
-      all API options would be configurable and we'd want to allow some sort of parameterized
-      form of the _where_ clause that at least allowed the dates to be computed dynamically.
-    */
+    tag: 'active-permits',      // Allow for possibility of multiple datasets
+    source_type: 'arcgis-rest', // Could have loaders for different source types
+    simulate_api: simulateApi,  // Just a hack for development
+
+    ///////////////////////////////////////////////////////////////////
+    // Query specification:
+    //  In a production version, we'd make all API options configurable
+    //  and have some sort of parameterized form of the _where_ clause
+    //  that at least allowed dates to be computed dynamically.
+    ///////////////////////////////////////////////////////////////////
+
     query: {
       maxRecordCount: 1000, // Not sure this belongs here, need to think how to generalize
       url: main_url,
@@ -53,6 +57,55 @@ var config = {
              ` record_status_date <= date '${years[1]}-${month}-${day}')`,
       returnGeometry: false
     },
+
+    ///////////////////////////////////////////////////////////////////
+    // Page filters specification:
+    //  This is used to create the sets of buttons at the top of the
+    //  page that let the user filter the exploration dataset. There
+    //  is obviously limited room for these button sets, so only a
+    //  couple should be included.
+    //
+    //  Each button implements a filter. If null, no filtering on the
+    //  field is applied. If _include_ is true, the filter lists all
+    //  values that should be included. If _include_ is false, the
+    //  filter lists all values that should be excluded (which is how
+    //  the "Other" filter is implemented below).
+    ///////////////////////////////////////////////////////////////////
+
+    pagefilters: [
+      {
+        field: 'record_type_group',
+        include_all_button: true,
+        buttons: [
+          {name: "All", filter: null, include: true},
+          {name: "Construction", filter: ["Construction"], include: true},
+          {name: "Planning", filter: ["Planning"], include: true},
+          {name: "Enforcement", filter: ["Enforcement"], include: true}
+        ]
+      },
+      {
+        field: 'record_type_type',
+        include_all_button: true,
+        buttons: [
+          {name: "All", filter: null, include: true},
+          {name: "Commercial", filter: ["Commercial"], include: true},
+          {name: "Residential", filter: ["Residential"], include: true},
+          {name: "Other", filter: ["Commercial", "Residential"], include: false}
+        ]
+      }
+    ],
+
+    ///////////////////////////////////////////////////////////////////
+    // Attributes specification:
+    //  This is primarily used to drive the _Key Dataset Information_
+    //  section, although the display names could be used in other
+    //  places.
+    //
+    //  The _expandable_ attribute lets the user expand the attribute
+    //  description to see up to _max_attribute_values_to_show_ values
+    //  in order of descending use frequency.
+    ///////////////////////////////////////////////////////////////////
+
     max_attribute_values_to_show: 50,
     attributes: [
       {
