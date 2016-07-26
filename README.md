@@ -40,9 +40,11 @@ Keep it simple. We are not looking for a finished product but want to learn abou
 
 ##Deliverables
 1. A link to the GitHub repository where you did your development, or a pull-request if you choose to fork this repo
+  * Repository is [here](https://github.com/ejaxon/Civic_Programmer_Analyst_Skills_Task) and I will also submit a pull request.
 2. A link to the live dashboard (using GitHub pages is preferred, but we really don’t care where you’re serving it from.)
+  * Site is [here](http://159.203.178.178/). Was unable to use Github pages because their rules don't allow mixing non-secure content.
 3. A brief write up describing your approach (ideally, this would just be a markdown file in your repo)
-  * [Notes on development are here](./DevelopmentNotes.md)
+  * [Notes on development are here](./ProjectNotes.md)
 
 
 ##Resources
