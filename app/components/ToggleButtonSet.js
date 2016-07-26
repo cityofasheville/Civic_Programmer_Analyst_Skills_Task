@@ -2,7 +2,6 @@ import React, { Component, PropTypes } from 'react';
 
 class ToggleButtonSet extends Component {
 
-
   createButton (item, index) {
     var callback;
     if (item.action != undefined) {

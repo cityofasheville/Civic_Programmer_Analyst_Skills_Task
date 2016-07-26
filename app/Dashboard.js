@@ -6,6 +6,7 @@ import {fetchDataset} from './state/actions/DataActions';
 import ToggleButtonSet from './components/ToggleButtonSet';
 import PieChart from "./components/PieChart.js";
 import BarChart from "./components/BarChart.js";
+import {countByField} from "./Transforms";
 
 export default class Dashboard extends React.Component {
 
@@ -126,96 +127,12 @@ export default class Dashboard extends React.Component {
     return shortList;
   }
 
-  groupByMonth (input, field) {
-    // This is silly, but the ArcGIS server SimpliCity uses
-    // uses simple unix time, while the open data portal one
-    // uses a date string. Just a hack for now - should be part of
-    // the data source configuration setup (and probably should
-    // be translated to common format as it's being processed in).
-    let unixDate = this.props.config.dataset.query.use_attributes;
-    let monthlyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let counter = 0;
-    let errCount = 0;
-    if (input == null || input == undefined) return null;
-    input.forEach( (r) => {
-      let month = 0;
-      ++counter;
-      try {
-        let d;
-        if (unixDate) {
-          d = new Date(r[field] + 0);
-        }
-        else {
-          d = new Date(Date.parse(r[field])); // this is the date.
-        }
-        month = d.getMonth();
-      }
-      catch (err) {
-        if (errCount < 20) console.log("Error in groupByMonth" + r[field]);
-        ++errCount;
-        month = 0; // We'll just let the month be 0 for now.
-      }
-      monthlyData[month] += 1;
-    });
-    return monthlyData;
-  }
-
-  groupByStringField (input, field, maxCategories) {
-    let data = [];
-    let cmap = {}
-    if (input == null || input == undefined) return null;
-    input.forEach( (r) => {
-      if (!(r[field] in cmap)) {
-        cmap[r[field]] = 1;
-      }
-      else {
-        cmap[r[field]] += 1;
-      }
-    });
-    let list = [];
-    for (let key in cmap) {
-      list.push({key: key, value: cmap[key]});
-    }
-    list.sort( (a, b) => {
-      return (a.value<b.value)?1:((a.value>b.value)?-1:0);
-    });
-    let shortList = list.slice(0,maxCategories);
-    let otherTotal = 0;
-    list.slice(maxCategories).forEach((item)=> {
-      otherTotal += item.value;
-    });
-    if (otherTotal > 0) {
-      shortList.push({key: "Other", value: otherTotal});
-    }
-    return shortList;
-  }
-
-  countByField (input, transform) {
-    let data = null;
-    if (transform.field_type == "string") {
-      data = this.groupByStringField (input,transform.field,transform.max_values);
-    }
-    else if (transform.field_type == "date") {
-      if (transform.period == "month") {
-        data = {
-          labels: ["1Jan","Feb","Mar", "Apr", "May", "Jun", "Jul",
-                   "Aug", "Sep", "Oct", "Nov", "Dec"],
-          values: this.groupByMonth(input, transform.field)
-        }
-      }
-      else {
-        console.log(`countByField: unknown period ${transform.period} for date field`);
-      }
-    }
-    return data;
-  }
-
   // Obviously this all needs a little generalization
   createQuickview (spec, input) {
     let data = input;
     if ('transform' in spec && spec.transform) {
       if (spec.transform.type == 'count_by_field') {
-        data = this.countByField(input, spec.transform);
+        data = countByField(input, spec.transform, this.props.config.dataset.query.usingBackupServer);
       }
       else {
         console.log("createQuickView: unknown transform type " + spec.transform.type);
@@ -252,18 +169,164 @@ export default class Dashboard extends React.Component {
     )
   }
 
+  quickviewSection(quickview, dataset) {
+    return (
+      <div className="dash-explore-quickview col-md-6 col-xs-12"
+        style={{borderStyle:"none",
+                borderWidth:"1px", borderColor:"lightgrey"
+              }}>
+        <div style={{textAlign:"center"}}>
+          <h3>Quick View</h3>
+        </div>
+        <div className="row">
+          {quickview.map ((spec, index) => {
+            return (
+              <div key={"qv-"+index} className="col-md-12" style={{marginBottom: "35px"}}>
+                {this.createQuickview(spec, dataset.items)}
+              </div>
+            )
+          })}
+          <hr/>
+        </div>
+
+        <br/>
+      </div>
+    )
+  }
+
+  keyInfoSection(attributes, attValuesLists) {
+    return (
+      <div className="dash-explore-keyinfo col-md-6 col-xs-12"
+           style={{borderStyle:"none", borderWidth:"1px", borderColor:"lightgrey"}}>
+        <div style={{textAlign:"center"}}>
+          <h3>Key Dataset Information </h3>
+          <div className="container-fluid dash-explore-keyinfo-list"
+               style={{marginTop: "15px"}}>
+
+          {attributes.map ( (att) => {
+            let moreSpan = null;
+            let visiblePanel = null;
+            if (att.expandable) {
+              const isVisible = (att.name in this.state.attVisible && this.state.attVisible[att.name]);
+              if (isVisible) {
+                moreSpan = (
+                  <span style={{float:"right"}}>
+                    <a id={"att-"+att.name} onClick={this.unShowValues} className="btn">Less&nbsp;<i className="fa fa-lg fa-angle-double-up"></i></a>
+                  </span>
+                );
+              }
+              else {
+                moreSpan = (
+                  <span style={{float:"right"}}>
+                    <a id={"att-"+att.name} onClick={this.showValues} className="btn">More&nbsp;<i className="fa fa-lg fa-angle-double-down"></i></a>
+                  </span>
+                );
+              }
+              if (att.name in this.state.attVisible && this.state.attVisible[att.name]) {
+                let icnt = 0;
+                if (attValuesLists[att.name] != undefined && attValuesLists[att.name].length > 0) {
+                  visiblePanel = (
+                    <div className="container-fluid" style={{textAlign:"left", marginBottom:"10px"}}>
+                      <hr/>
+                        <div key={att.name+"-hdr"} className="row" style={{marginBottom:"5px"}}>
+                          <div className="col-md-1"></div>
+                          <div className="col-md-6">
+                            <u><b>Name</b></u>
+                          </div>
+                          <div className="col-md-5">
+                            <u><b># of Records</b></u>
+                          </div>
+                        </div>
+
+                        {attValuesLists[att.name].map( (item) => {
+                          return (
+                            <div key={att.name+"-"+icnt++} className="row">
+                              <div className="col-md-1"></div>
+                              <div className="col-md-6">
+                                {item.key}
+                              </div>
+                              <div className="col-md-5">
+                                {item.value}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  );
+                }
+                else {
+                  visiblePanel = <p>No values found.</p>
+                }
+              }
+            }
+            return (
+              <div key={"att-key-" + att.name} className="row"
+                style={{paddingTop:"5px", marginTop:"5px", borderStyle:"solid",
+                        borderWidth:"1px", borderColor:"lightblue",
+                        borderRadius: "15px"}}>
+                <div style={{textAlign:"left"}} className="col-md-4">
+                  <strong style={{fontSize:"105%"}}>{att.display}</strong>&nbsp;
+                  <span style={{fontSize:"90%", color:"CornflowerBlue", position:"relative", top: "-5px"}}
+                        title={"Field name: " + att.name}><i className="fa fa-info-circle"></i></span>
+                </div>
+                <div style={{textAlign:"left"}} className="col-md-8">
+                  <p>
+                    {att.description}
+                    {moreSpan}
+                  </p>
+                  <p>
+
+                  </p>
+
+                </div>
+                <div className="col-md-12">
+                 {visiblePanel}
+                </div>
+              </div>
+            )
+          })}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  exploreHeader(explore_title, status_text, pagefilters, totalCount, filteredCount) {
+    return (
+      <div className = "row dash-explore-header">
+        <div className="col-md-12" style={{marginBottom:"20px"}}>
+          <h2>{explore_title}</h2>
+        </div>
+        <div className="col-md-12" style={{height:"40px"}} >
+          <div style={{float:"right", marginTop:"15px"}}>
+            <p style={{lineHeight:"40px"}}>
+               <b>Total:</b> {totalCount} &nbsp;&nbsp;
+               <b>Filtered:</b> {filteredCount}
+               &nbsp;&nbsp;&nbsp;&nbsp;
+               ({status_text})
+            </p>
+          </div>
+          <div style={{float:"left"}}>
+            {
+              pagefilters.map ( (pfilter) => {
+                return this.createToggleButtonSet(pfilter);
+              })
+            }
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   render() {
     let {common, config, data} = this.props;
     let tag = config.dataset.tag;
     let dataset = {...data.datasets[tag]};
-    let attributes = [];
-    let totalCount = 0, filteredCount=0;
-    let filteredStatus = [], filteredType = [];
-    let monthlyData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let statusPie = null, typePie = null;
-    let status_text = "Dataload initializing...";
     let attValuesLists = {};
-    let pagefilters = [];
+    let attributes = config.attributes;
+    let pagefilters = config.pagefilters;
+    let totalCount = 0, filteredCount=0;
+    let status_text = "Dataload initializing...";
     // Run datasets through any filters that are defined.
     if ((dataset.status == 'add' || dataset.status == 'finish')) {
       if (dataset.status == 'add')
@@ -273,11 +336,6 @@ export default class Dashboard extends React.Component {
       dataset = this.filterDataset(data.datasets[tag], this.state.filters);
       filteredCount = dataset.items.length;
       totalCount = data.datasets[tag].items.length;
-      filteredStatus = this.groupByStringField(dataset.items,'record_status',6);
-      filteredType = this.groupByStringField(dataset.items,'record_type',6);
-      monthlyData = this.groupByMonth(dataset.items, 'record_status_date');
-      attributes = config.attributes;
-      pagefilters = config.pagefilters;
       for (let attKey in this.state.attVisible) {
         attValuesLists[attKey] = this.generateAttValuesList(attKey, dataset.items, config.max_attribute_values_to_show);
       }
@@ -304,144 +362,11 @@ export default class Dashboard extends React.Component {
         </div>
 
         <div className="container dash-main" style={{marginLeft:"10px",marginRight:"10px"}}>
-          <div className = "row dash-explore-header">
-            <div className="col-md-12" style={{marginBottom:"20px"}}>
-              <h2>{config.explore_title}</h2>
-            </div>
-            <div className="col-md-12" style={{height:"40px"}} >
-              <div style={{float:"right", marginTop:"15px"}}>
-                <p style={{lineHeight:"40px"}}>
-                   <b>Total:</b> {totalCount} &nbsp;&nbsp;
-                   <b>Filtered:</b> {filteredCount}
-                   &nbsp;&nbsp;&nbsp;&nbsp;
-                   ({status_text})
-                </p>
-              </div>
-              <div style={{float:"left"}}>
-                {
-                  pagefilters.map ( (pfilter) => {
-                    return this.createToggleButtonSet(pfilter);
-                  })
-                }
-              </div>
-            </div>
-          </div>
-
+          {this.exploreHeader(config.explore_title, status_text, pagefilters,
+                              totalCount, filteredCount)}
           <div className = "dash-explore-body row" style={{marginTop:"25px"}}>
-            <div className="dash-explore-keyinfo col-md-6 col-xs-12"
-                 style={{borderStyle:"none", borderWidth:"1px", borderColor:"lightgrey"}}>
-              <div style={{textAlign:"center"}}>
-                <h3>Key Dataset Information </h3>
-                <div className="container-fluid dash-explore-keyinfo-list"
-                     style={{marginTop: "15px"}}>
-
-                {attributes.map ( (att) => {
-                  let moreSpan = null;
-                  let visiblePanel = null;
-                  if (att.expandable) {
-                    const isVisible = (att.name in this.state.attVisible && this.state.attVisible[att.name]);
-                    if (isVisible) {
-                      moreSpan = (
-                        <span style={{float:"right"}}>
-                          <a id={"att-"+att.name} onClick={this.unShowValues} className="btn">Less&nbsp;<i className="fa fa-lg fa-angle-double-up"></i></a>
-                        </span>
-                      );
-                    }
-                    else {
-                      moreSpan = (
-                        <span style={{float:"right"}}>
-                          <a id={"att-"+att.name} onClick={this.showValues} className="btn">More&nbsp;<i className="fa fa-lg fa-angle-double-down"></i></a>
-                        </span>
-                      );
-                    }
-                    if (att.name in this.state.attVisible && this.state.attVisible[att.name]) {
-                      let icnt = 0;
-                      if (attValuesLists[att.name] != undefined && attValuesLists[att.name].length > 0) {
-                        visiblePanel = (
-                          <div className="container-fluid" style={{textAlign:"left", marginBottom:"10px"}}>
-                            <hr/>
-                              <div key={att.name+"-hdr"} className="row" style={{marginBottom:"5px"}}>
-                                <div className="col-md-1"></div>
-                                <div className="col-md-6">
-                                  <u><b>Name</b></u>
-                                </div>
-                                <div className="col-md-5">
-                                  <u><b># of Records</b></u>
-                                </div>
-                              </div>
-
-                              {attValuesLists[att.name].map( (item) => {
-                                return (
-                                  <div key={att.name+"-"+icnt++} className="row">
-                                    <div className="col-md-1"></div>
-                                    <div className="col-md-6">
-                                      {item.key}
-                                    </div>
-                                    <div className="col-md-5">
-                                      {item.value}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        );
-                      }
-                      else {
-                        visiblePanel = <p>No values found.</p>
-                      }
-                    }
-                  }
-                  return (
-                    <div key={"att-key-" + att.name} className="row"
-                      style={{paddingTop:"5px", marginTop:"5px", borderStyle:"solid",
-                              borderWidth:"1px", borderColor:"lightblue",
-                              borderRadius: "15px"}}>
-                      <div style={{textAlign:"left"}} className="col-md-4">
-                        <strong style={{fontSize:"105%"}}>{att.display}</strong>&nbsp;
-                        <span style={{fontSize:"90%", color:"CornflowerBlue", position:"relative", top: "-5px"}}
-                              title={"Field name: " + att.name}><i className="fa fa-info-circle"></i></span>
-                      </div>
-                      <div style={{textAlign:"left"}} className="col-md-8">
-                        <p>
-                          {att.description}
-                          {moreSpan}
-                        </p>
-                        <p>
-
-                        </p>
-
-                      </div>
-                      <div className="col-md-12">
-                       {visiblePanel}
-                      </div>
-                    </div>
-                  )
-                })}
-
-
-                </div>
-              </div>
-            </div>
-            <div className="dash-explore-quickview col-md-6 col-xs-12"
-              style={{borderStyle:"none",
-                      borderWidth:"1px", borderColor:"lightgrey"
-                    }}>
-              <div style={{textAlign:"center"}}>
-                <h3>Quick View</h3>
-              </div>
-              <div className="row">
-                {config.quickview.map ((spec, index) => {
-                  return (
-                    <div key={"qv-"+index} className="col-md-12" style={{marginBottom: "35px"}}>
-                      {this.createQuickview(spec, dataset.items)}
-                    </div>
-                  )
-                })}
-                <hr/>
-              </div>
-
-              <br/>
-            </div>
+            {this.keyInfoSection(attributes, attValuesLists)}
+            {this.quickviewSection(config.quickview, dataset)}
           </div>
         </div>
       </div>

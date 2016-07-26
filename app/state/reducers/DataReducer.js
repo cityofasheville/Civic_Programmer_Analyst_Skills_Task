@@ -26,14 +26,12 @@ export default function data (state = {datasets: {}, filters: {}}, action) {
     }
     case types.UPDATE_DATASET:
     {
-      //console.log("Update dataset, operation = " + action.data.operation);
       let tmpDatasets = {};
       let ds = {...state.datasets[action.data.tag]};
       switch (action.data.operation) {
         case "count":
           ds.status = 'count';
           ds.count = action.data.count;
-          //console.log("Expected count is " + ds.count);
           break;
 
         case "add":

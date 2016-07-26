@@ -65,3 +65,19 @@ Then navigate in browser to http://localhost:3000. This uses the Webpack develop
 I've built this using React and Redux, mostly in ES2015 with a smattering of ES7 (yay Babel!).
 
 In fact, given the simplicity of the app, Redux is not really necessary - it would have been quite sufficient to keep things in local state in the Dashboard component. However, it may be valuable if we build on this, especially if we have multi-page dashboards. In addition, I find it helpful in isolating the asynchronous API calls.
+
+## Caveats and Confessions
+
+### Github pages
+I was not able to use Github pages because it doesn't allow accessing any non-https resources (or at least I was unable to figure out how to make it do so) and the SimpliCity API endpoint doesn't support https access. So I've just hosted it on a [Digital Ocean server](http://159.203.178.178/).
+
+### API Troubles
+I continue to have trouble accessing the original ArcGIS server, so I'm using the SimpliCity API. However, it also continues to behave strangely - it insists on returning far more records than it claims I should get. First, either it ignores resultRecordCount in the query or I don't understand what it means since I set it to 1000, but the api returns 10000 records at a time. More problematic, however, is that when I ask for a count, it returns 37094, but when I ask for the records themselves (using resultOffset to page through), it keeps going long past that. \ It's quite possible I have a bug in my query, but all the dates do seem to fall in 2015 & 2016 and supposedly I've asked for distinct records, which would be the obvious problems.
+
+In any case, for the time being I've just artificially cut off API calls after 40,000 records. This presumably means that the actual numbers the dashboard shows are off somehow, but it still serves to demonstrate the functionality. I can figure out what's wrong and fix the query later, if the code actually gets used for something.
+
+### Styling
+...is not my strength. Before taking this to production I would need to go through and systematize the styling. Right now it's basically all inline styles. The setup does allow the use of CSS modules, but I didn't actually use them here because I'm a bad person.
+
+### General Gaps
+In a few places I've put in a `FIXTHIS if production` comment to note some of the more obvious gaps that would need to be filled.

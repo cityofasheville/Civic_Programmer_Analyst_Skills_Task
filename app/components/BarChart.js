@@ -99,9 +99,9 @@ class BarChart extends Component {
     this.chartData.datasets[0].borderColor = new Array(data.length).fill("#777777");
     this.chartOptions.title.text = this.props.title;
     return (
-        <div>
-            <canvas  ref={this.saveDiv}></canvas>
-        </div>
+      <div>
+        <canvas  ref={this.saveDiv}></canvas>
+      </div>
     )
   }
 }

@@ -9,11 +9,10 @@ var years = [now.getFullYear()-1, now.getFullYear()];
 
 var simulateApi = false;
 var useBackupServer = true; // Uses the AWS server that SimpliCity uses
-var useAttributes = false;
+                            // There are a few format differences on this server
 var main_url = null;
 if (useBackupServer) {
   main_url = 'http://arcgis-arcgisserver1-1222684815.us-east-1.elb.amazonaws.com/arcgis/rest/services/opendata/FeatureServer/1/query';
-  useAttributes = true; // There are a few format differences on this server
 }
 else {
   main_url = 'http://arcgis.ashevillenc.gov/arcgis/rest/services/Permits/AshevillePermits/MapServer/0/query';
@@ -49,7 +48,7 @@ var config = {
     query: {
       maxRecordCount: 1000, // Not sure this belongs here, need to think how to generalize
       url: main_url,
-      use_attributes: useAttributes, // false for the simulated or first url, true for the second.
+      usingBackupServer: useBackupServer, 
       fields:  "date_opened,record_status,record_status_date,"
               + "record_type,record_type_group,record_type_category,record_type_type,"
               + "record_type_subtype,latitude,longitude",
@@ -80,9 +79,9 @@ var config = {
       include_all_button: true,
       buttons: [
         {name: "All", filter: [], include: true},
-        {name: "Construction", filter: ["Construction"], include: true},
+        {name: "Construction", filter: ["Permits"], include: true},
         {name: "Planning", filter: ["Planning"], include: true},
-        {name: "Enforcement", filter: ["Enforcement"], include: true}
+        {name: "Enforcement", filter: ["Services"], include: true}
       ]
     },
     {
@@ -106,7 +105,9 @@ var config = {
   //
   //  The _expandable_ attribute lets the user expand the attribute
   //  description to see up to _max_attribute_values_to_show_ values
-  //  in order of descending use frequency.
+  //  in order of descending use frequency. In the future it would be
+  //  cool to add characterizations of other data types (e.g., min,
+  //  max, median, mean of numerical values, range for dates, etc.).
   ///////////////////////////////////////////////////////////////////
 
   max_attribute_values_to_show: 50,
@@ -189,13 +190,10 @@ var config = {
 
   ///////////////////////////////////////////////////////////////////
   // Quickview specification:
-  //  This is primarily used to drive the _Key Dataset Information_
-  //  section, although the display names could be used in other
-  //  places.
+  //  This drives the visualizations in the Quickview section.
   //
-  //  The _expandable_ attribute lets the user expand the attribute
-  //  description to see up to _max_attribute_values_to_show_ values
-  //  in order of descending use frequency.
+  //  Right now I only have 2 visualization types and one transform
+  //  type, but it should be straighforward to add more.
   ///////////////////////////////////////////////////////////////////
 
   quickview: [

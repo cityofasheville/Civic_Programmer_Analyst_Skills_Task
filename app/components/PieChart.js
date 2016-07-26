@@ -1,8 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import {autobind} from 'core-decorators'
-//import d3 from 'd3';
 import Chart from "chart.js";
-//var d3BarChart = require('./D3BarChart');
 
 class PieChart extends Component {
 
@@ -59,7 +57,6 @@ class PieChart extends Component {
       //console.log("Called saveDiv with null");
     }
     else {
-      //console.log("Called saveDiv without null")
       this.savedDiv = div;
     }
   }
@@ -120,9 +117,9 @@ class PieChart extends Component {
       };
       this.chartOptions.title.text = this.props.title;
       return (
-          <div>
-              <canvas  ref={this.saveDiv}></canvas>
-          </div>
+        <div>
+          <canvas  ref={this.saveDiv}></canvas>
+        </div>
       )
     }
 }
