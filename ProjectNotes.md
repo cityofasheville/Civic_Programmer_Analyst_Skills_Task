@@ -2,42 +2,63 @@
 
 ## The Problem
 
-Dataset discovery page.  Solve own problem.
+I have approached the problem as one of creating a kind of _dataset discovery
+tool_, something that would:
+
+* Allow a user who stumbles onto the dataset through SimpliCity to quickly understand
+what it's about and whether they're interested,
+* Allow a developer or research to quickly get up to speed on what information
+the dataset contains and how different fields are related to one another.
+
+In a way, I've written the tool that I wish I'd had when I was starting this project and would want to have before trying to build an application that uses the data.
 
 ## Approach
 
-Use the process of building a dashboard to grasp the dataset in order to present it better in the dashboard.
+Briefly, the dashboard attempts to answer a couple simple questions:
 
+* What is this dataset about?
+* What fields are available and how are different fields related to one another?
 
-## Installation
+The first question is obviously best addressed with a meaningful name and description - nothing original there. The tool helps answer the second question through a combination of individual field documentation and the ability to explore a sample dataset (here permit records active within the past year).
+
+The dashboard provides a few features to help with the exploration:
+
+1. Drill-down on individual fields to view typical values,
+2. Simple visualizations that convey information about key fields, e.g., a pie chart of most-frequently used values in a category field or a bar chart showing activity over time,
+3. Page-level filters that can be used to narrow the results in the previous features.
+
+The tool uses a [configuration file](./app/dashboard_config.js) to drive the construction of a dashboard. Specifically, the configuration file defines:
+
+* Dashboard titles, description & link to open data portal
+* API information to access the sample data
+* Filter button-sets and the fields they act on
+* Attribute documentation,including whether typical values can be viewed (see notes on future below)
+* Visualizations to show in the Quickview section and the data transforms that feed them.
+
+One benefit of the configuration-driven approach is that a dashboard developer can actually use the tool to explore and understand the dataset in order to build a better dashboard for it.
+
+## Future
+
+There are a few obvious enhancements to be made.
+
+* Offer a bigger set of data transformations and visualizations for use in the Quickview section.
+* Create data loaders for a few different APIs and make sure that all relevant API parameters are configurable.
+* Create "typical value" displays for most field times (e.g., min/max/median/mean for numerical, date range, maybe even word clouds for text fields).
+* Allow a configuration file to be passed in as a string.
+* ...
+
+## Technical Details
+
+### Installation
+For a development version, simply clone the repo and run:
 
 ````
 npm install
 npm start
 ````
-Then navigate in browser to http://localhost:3000.
+Then navigate in browser to http://localhost:3000. This uses the Webpack development server. To create a hostable site, just run the `webpack` command - output is in the `dist` directory. For this task I just manually uploaded the `dist` directory contents to a server. I've not yet created a production webpack configuration file so the live dashboard site is just running the development version.
 
-For now I'm just manually publishing to the Github pages site by running _webpack_ and then moving the files from the _dist_ directory into the main directory in a _gh-pages_ branch (you'll also need to change index.html to load _/Civic_Programmer_Analyst_Skills_Task/avl-dashboard-main.js_ rather than _/avl-dashboard-main.js_). However, for a real production version, I'd have a production webpack configuration and publish it to an NPM server.
+### Framework
+I've built this using React and Redux, mostly in ES2015 with a smattering of ES7 (yay Babel!).
 
-In various files I've included comments of the form:
-````
-  /******* Project Commentary *********
-    Some commentary about the project here
-  */
-````
-The purpose of these sections is usually to point out things that are just stubbed out, but
-that provide extension points for development of a production tool.
-
-## Framework
-I've built this using React and Redux. In fact, given the simplicity of the app, Redux is not really necessary - it would have been quite sufficient to keep things in local state in the Dashboard component. However, it may be valuable if we build on this, especially if we have multi-page dashboards. In addition, I find it helpful in isolating the asynchronous API calls.
-
-webpack + ES2015 (and a smattering of ES7, thanks to the magic of Babel)
-
-
-## Future Considerations
-
-* Break out and publish the individual visualization components and the dashboard component as NPM modules.
-
-* I made the datasets an array so that more sophisticated visualizations and analyses involving multiple datasets can be done.
-
-* Obviously the dashboard component needs to be more configurable.
+In fact, given the simplicity of the app, Redux is not really necessary - it would have been quite sufficient to keep things in local state in the Dashboard component. However, it may be valuable if we build on this, especially if we have multi-page dashboards. In addition, I find it helpful in isolating the asynchronous API calls.

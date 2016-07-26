@@ -24,7 +24,7 @@ else {
 //////////////////////////////
 
 var config = {
-  title: "City of Asheville Permits Dashboard",
+  title: "City of Asheville Permits Dataset",
   description: "The full data set includes all building permit activity in the " +
                 "City of Asheville from 2000 to the present and includes " +
                 "planning permits, building construction permits, and " +
@@ -188,7 +188,7 @@ var config = {
   ],
 
   ///////////////////////////////////////////////////////////////////
-  // Attributes specification:
+  // Quickview specification:
   //  This is primarily used to drive the _Key Dataset Information_
   //  section, although the display names could be used in other
   //  places.
