@@ -7,7 +7,7 @@ tool_, something that would:
 
 * Allow a user who stumbles onto the dataset through SimpliCity to quickly understand
 what it's about and whether they're interested,
-* Allow a developer or research to quickly get up to speed on what information
+* Allow a developer or researcher to quickly get up to speed on what information
 the dataset contains and how different fields are related to one another.
 
 In a way, I've written the tool that I wish I'd had when I was starting this project and would want to have before trying to build an application that uses the data.
