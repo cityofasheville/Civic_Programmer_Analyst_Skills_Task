@@ -224,17 +224,18 @@ export default class Dashboard extends React.Component {
     }
     if (data == null) return data;
 
-    switch (spec.type) {
+    let chart = null;
 
+    switch (spec.type) {
       case 'pie':
         {
-          return <PieChart data={data} title={spec.title}/>
+          chart = <PieChart data={data} title={spec.title}/>
         }
         break;
       case 'bar':
         {
           if (data.values == null) return null;
-          return <BarChart data={data.values} labels={data.labels} title={spec.title}/>
+          chart = <BarChart data={data.values} labels={data.labels} title={spec.title}/>
         }
         break;
       default:
@@ -243,7 +244,12 @@ export default class Dashboard extends React.Component {
           return null;
         }
     }
-    return
+    return (
+      <div>
+        {chart}
+        <div style={{marginLeft: "10%", marginRight: "5%", marginTop:"5px"}}><b>{spec.description}</b></div>
+      </div>
+    )
   }
 
   render() {
@@ -337,14 +343,14 @@ export default class Dashboard extends React.Component {
                     if (isVisible) {
                       moreSpan = (
                         <span style={{float:"right"}}>
-                          <a id={"att-"+att.name} onClick={this.unShowValues} className="btn"><i className="fa fa-lg fa-angle-double-up"></i></a>
+                          <a id={"att-"+att.name} onClick={this.unShowValues} className="btn">Less&nbsp;<i className="fa fa-lg fa-angle-double-up"></i></a>
                         </span>
                       );
                     }
                     else {
                       moreSpan = (
                         <span style={{float:"right"}}>
-                          <a id={"att-"+att.name} onClick={this.showValues} className="btn"><i className="fa fa-lg fa-angle-double-down"></i></a>
+                          <a id={"att-"+att.name} onClick={this.showValues} className="btn">More&nbsp;<i className="fa fa-lg fa-angle-double-down"></i></a>
                         </span>
                       );
                     }
@@ -390,14 +396,18 @@ export default class Dashboard extends React.Component {
                       style={{paddingTop:"5px", marginTop:"5px", borderStyle:"solid",
                               borderWidth:"1px", borderColor:"lightblue",
                               borderRadius: "15px"}}>
-                      <div style={{textAlign:"left", fontSize:"110%"}} className="col-md-4">
-                        <strong>{att.display}</strong>
+                      <div style={{textAlign:"left"}} className="col-md-4">
+                        <strong style={{fontSize:"105%"}}>{att.display}</strong>&nbsp;
+                        <span style={{fontSize:"90%", color:"CornflowerBlue", position:"relative", top: "-5px"}}
+                              title={"Field name: " + att.name}><i className="fa fa-info-circle"></i></span>
                       </div>
                       <div style={{textAlign:"left"}} className="col-md-8">
-                        <p>{att.description}</p>
                         <p>
-                          <b>Field name:</b> &nbsp; {att.name}
+                          {att.description}
                           {moreSpan}
+                        </p>
+                        <p>
+
                         </p>
 
                       </div>

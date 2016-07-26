@@ -22,6 +22,10 @@ class PieChart extends Component {
     };
     this.chartOptions = {
       responsive: true,
+      animation: {
+        animateRotate: false,
+        animateScale: false
+      },
       maintainAspectRation: false,
       legend: {
         display: true,

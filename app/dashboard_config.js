@@ -125,7 +125,7 @@ var config = {
     },
     {
       name: "record_status_date",
-      display: "State Date",
+      display: "Last Activity Date",
       description: "The date the permit status was last updated.",
       expandable: false
     },
@@ -134,7 +134,7 @@ var config = {
       display: "Major Type",
       description: "Top-level type indicating whether the permit is for " +
                    "construction ('Permits'), planning ('Planning') or " +
-                   "enforcement ('Services'). ",
+                   "enforcement ('Services').",
       expandable: true
     },
     {
@@ -202,6 +202,7 @@ var config = {
     {
       title: "Past Year Activity By Month",
       type: "bar",
+      description: "Number of records whose last activity date fell within each of the past 12 months.",
       transform: {
         type: "count_by_field",
         field: "record_status_date",
@@ -212,6 +213,7 @@ var config = {
     {
       title: "Top Status Values",
       type: "pie",
+      description: "The most frequently used values of the status field.",
       transform: {
         type: "count_by_field",
         field: "record_status",
@@ -222,6 +224,7 @@ var config = {
     {
       title: "Top Work Type Values",
       type: "pie",
+      description: "The most frequently used values of the work type field.",
       transform: {
         type: "count_by_field",
         field: "record_type",

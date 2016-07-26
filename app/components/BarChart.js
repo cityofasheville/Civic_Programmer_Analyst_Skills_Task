@@ -21,6 +21,7 @@ class BarChart extends Component {
     };
     this.chartOptions = {
       responsive: true,
+      animation: false,
       maintainAspectRation: false,
       legend: {
         display: false,
