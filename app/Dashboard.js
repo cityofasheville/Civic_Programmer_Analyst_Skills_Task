@@ -297,21 +297,23 @@ export default class Dashboard extends React.Component {
         <div className="col-md-12" style={{marginBottom:"20px"}}>
           <h2>{explore_title}</h2>
         </div>
-        <div className="col-md-12" style={{height:"40px"}} >
-          <div style={{float:"right", marginTop:"15px"}}>
+        <div className="col-md-8 col-xs-12">
+          <div>
+            {
+              pagefilters.map ( (pfilter) => {
+                return this.createToggleButtonSet(pfilter);
+              })
+            }
+          </div>
+        </div>
+        <div className="col-md-4 col-xs-12" style={{height:"40px"}} >
+          <div style={{marginTop:"15px"}}>
             <p style={{lineHeight:"40px"}}>
                <b>Total:</b> {totalCount} &nbsp;&nbsp;
                <b>Filtered:</b> {filteredCount}
                &nbsp;&nbsp;&nbsp;&nbsp;
                ({status_text})
             </p>
-          </div>
-          <div style={{float:"left"}}>
-            {
-              pagefilters.map ( (pfilter) => {
-                return this.createToggleButtonSet(pfilter);
-              })
-            }
           </div>
         </div>
       </div>
@@ -362,8 +364,10 @@ export default class Dashboard extends React.Component {
         </div>
 
         <div className="container dash-main" style={{marginLeft:"10px",marginRight:"10px"}}>
+
           {this.exploreHeader(config.explore_title, status_text, pagefilters,
                               totalCount, filteredCount)}
+
           <div className = "dash-explore-body row" style={{marginTop:"25px"}}>
             {this.keyInfoSection(attributes, attValuesLists)}
             {this.quickviewSection(config.quickview, dataset)}
